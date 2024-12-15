@@ -259,8 +259,8 @@ print(data1.head())
 
 data1 = data1.drop(columns=['MCC Category'])
 
-mcc_frequency = data['MCC_Category_Agricultural Services'].value_counts()
-print(mcc_frequency)
+# mcc_frequency = data['MCC_Category_Agricultural Services'].value_counts()
+# print(mcc_frequency)
 
 print(data1.head())
 
@@ -275,8 +275,8 @@ print(numerical_summary)
 
 data1['Is Registered'] = data1['Is Registered'].map({'Yes': 0, 'No': 1})
 
-mcc_frequency = data['Is Registered'].value_counts()
-print(mcc_frequency)
+# mcc_frequency = data['Is Registered'].value_counts()
+# print(mcc_frequency)
 
 
 
@@ -336,19 +336,51 @@ print(data1[['Transaction_per_Unit_Turnover', 'Transaction_per_Unit_Turnover_Rob
 
 import matplotlib.pyplot as plt
 
-# Plot the histogram for the scaled values
+# Filter the data within the specified range
+filtered_data = data1[(data1['Transaction_per_Unit_Turnover_RobustScaled'] >= -0.2) &
+                      (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= 0)]
+
+# Calculate the mean and standard deviation for the filtered data
+mean_filtered = filtered_data['Transaction_per_Unit_Turnover_RobustScaled'].mean()
+std_dev_filtered = filtered_data['Transaction_per_Unit_Turnover_RobustScaled'].std()
+
+# Plotting the histogram for Transaction_per_Unit_Turnover_RobustScaled
 plt.figure(figsize=(10, 6))
-plt.hist(data1['Transaction_per_Unit_Turnover_RobustScaled'], bins=100000, edgecolor='black')
+plt.hist(data1['Transaction_per_Unit_Turnover_RobustScaled'], bins=5000, edgecolor='black')
+
+# Title and labels
 plt.title('Histogram of Scaled Transaction per Unit Turnover')
 plt.xlabel('Scaled Transaction per Unit Turnover')
 plt.ylabel('Frequency')
 plt.grid(True)
 
-# Limit the x-axis to 0 to 400
-plt.xlim(-0.2, 0.3)
+# Limit the x-axis to -0.2 to 0.2
+plt.xlim(-0.2, 0)
+
+# Add vertical lines for mean and standard deviations
+plt.axvline(mean_filtered, color='red', linestyle='--', label=f'Mean: {mean_filtered:.4f}')
+plt.axvline(mean_filtered - std_dev_filtered/2, color='blue', linestyle='--', label=f'Mean - 1σ: {mean_filtered - std_dev_filtered:.4f}')
+plt.axvline(mean_filtered + std_dev_filtered/2, color='blue', linestyle='--', label=f'Mean + 1σ: {mean_filtered + std_dev_filtered:.4f}')
+
+# Show the legend
+plt.legend()
 
 # Display the plot
 plt.show()
+
+filtered_data = data1[(data1['Transaction_per_Unit_Turnover_RobustScaled'] >= -0.2) &
+                      (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= 0.2)]
+
+# Calculate the mean and standard deviation of the filtered data
+mean_filtered = filtered_data['Transaction_per_Unit_Turnover_RobustScaled'].mean()
+std_dev_filtered = filtered_data['Transaction_per_Unit_Turnover_RobustScaled'].std()
+
+# Output the results
+print(f'Mean of filtered data: {mean_filtered}')
+print(f'Standard Deviation of filtered data: {std_dev_filtered}')
+
+
+
 
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -394,12 +426,102 @@ plt.show()
 print(f"Filtered mean: {filtered_mean:.2f}")
 print(f"Filtered standard deviation: {filtered_std_dev:.2f}")
 
+# mean = data1['Transaction_per_Unit_Turnover_RobustScaled'].mean()
+# std_dev = data1['Transaction_per_Unit_Turnover_RobustScaled'].std()
+#mean_filtered - std_dev_filtered
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Calculate quartiles (Q1, Q2, Q3)
+Q1 = data1['Transaction_per_Unit_Turnover_RobustScaled'].quantile(0.25)
+Q2 = data1['Transaction_per_Unit_Turnover_RobustScaled'].quantile(0.50)  # Median
+Q3 = data1['Transaction_per_Unit_Turnover_RobustScaled'].quantile(0.75)
+
+# Plotting the histogram
+plt.figure(figsize=(10, 6))
+plt.hist(data1['Transaction_per_Unit_Turnover_RobustScaled'], bins=50000, edgecolor='black', alpha=0.7)
+
+# Add lines for Q1, Q2, Q3
+plt.axvline(Q1, color='red', linestyle='--', label=f'Q1 ({Q1:.2f})')
+plt.axvline(Q2, color='green', linestyle='--', label=f'Q2 (Median) ({Q2:.2f})')
+plt.axvline(Q3, color='blue', linestyle='--', label=f'Q3 ({Q3:.2f})')
+
+# Title and labels
+plt.title('Histogram of Transaction per Unit Turnover (Scaled)')
+plt.xlabel('Scaled Transaction per Unit Turnover')
+plt.ylabel('Frequency')
+plt.xlim(-0.2, 0.2)
+# Show legend
+plt.legend()
+
+# Display the plot
+plt.grid(True)
+plt.show()
+
+
+# Calculate quartiles (Q1, Q2, Q3)
+Q1 = data1['Transaction_per_Unit_Turnover_RobustScaled'].quantile(0.25)
+Q2 = data1['Transaction_per_Unit_Turnover_RobustScaled'].quantile(0.50)  # Median
+Q3 = data1['Transaction_per_Unit_Turnover_RobustScaled'].quantile(0.75)
+
+# Define conditions based on quartiles
+conditions = [
+    (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= Q1),  # competitive
+    (data1['Transaction_per_Unit_Turnover_RobustScaled'] > Q1) & 
+    (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= Q3),  # neutral
+    (data1['Transaction_per_Unit_Turnover_RobustScaled'] > Q3)   # non-competitive
+]
+
+# Define corresponding labels
+labels = ['Competitive', 'Neutral', 'Non-Competitive']
+
+# Apply conditions and assign labels to the 'Current pay' column
+data1['Current pay'] = np.select(conditions, labels)
+
+# Check the frequency of each label
+print(data1['Current pay'].value_counts())
+
+data1.to_csv('updated_transaction_data_withlabels.csv', index=False)
+
+print("CSV file has been saved successfully!")
+
+
+
+
+
+
+
+
+
+
+
+mean = mean_filtered
+std_dev = std_dev_filtered/2
+# Define conditions for updating 'Current pay' column
+conditions = [
+    (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= mean - std_dev),  # competitive
+    (data1['Transaction_per_Unit_Turnover_RobustScaled'] > mean - std_dev) & 
+    (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= mean + std_dev),  # neutral
+    (data1['Transaction_per_Unit_Turnover_RobustScaled'] > mean + std_dev)   # non-competitive
+]
+
+# Define the corresponding labels
+labels = ['competitive', 'neutral', 'non-competitive']
+
+# Update the 'Current pay' column based on the conditions
+data1['Current pay'] = np.select(conditions, labels, default='non-competitive')
+
+# Check the updated 'Current pay' column
+print(data1['Current pay'].value_counts())
+
+
 
 print(data1.columns)
 
 # Dropping the specified columns
-data1 = data1.drop(columns=['Transaction_per_Unit_Turnover', 'Transaction_per_Unit_Turnover_Scaled'])
-
+data1 = data1.drop(columns=['Transaction_per_Unit_Turnover'])
+# data1 = data1.drop(columns=['Transaction_per_Unit_Turnover', 'Transaction_per_Unit_Turnover_Scaled'])
 # Verify that the columns are dropped
 print(data1.head())
 
@@ -449,6 +571,15 @@ data1['Current pay'] = np.select(conditions, values, default='Unknown')
 
 # Verify the new column
 print(data1[['Transaction_per_Unit_Turnover_RobustScaled', 'Current pay']].head())
+
+frequency = data1['Current pay'].value_counts()
+
+# Print the frequency count
+print(frequency)
+
+print(data1['Transaction_per_Unit_Turnover_RobustScaled'].max())
+
+
 
 
 from sklearn.preprocessing import MinMaxScaler
