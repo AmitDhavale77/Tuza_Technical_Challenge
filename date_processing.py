@@ -116,7 +116,7 @@ non_matching_rows = data[data['Mastercard Debit'].str.contains(r'\d+\.\d+%', na=
 print("Rows where 'Mastercard Debit' does not match the expected pattern:")
 print(non_matching_rows['Mastercard Debit'])
 
-print(data['Mastercard Debit Percentage'][999])
+print(data['Mastercard Debit Percentage'][:5])
 
 # Incorporate the fixed part of the fees
 data['Total Annual Transaction Fees'] += (
@@ -152,6 +152,8 @@ data = data.drop(columns=columns_to_drop)
 # Verify the columns have been dropped
 print(data.columns)
 
+print(data.iloc[0:5])
+
 col = ["MCC Code"]
 data = data.drop(columns=col)
 
@@ -161,15 +163,61 @@ print(data.dtypes)
 print(data["MCC Category"])
 
 
+pd.set_option('display.max_rows', None)  # No limit on rows
+pd.set_option('display.max_columns', None)  # No limit on columns
+pd.set_option('display.width', None)  # Auto-detect width
+pd.set_option('display.max_colwidth', None)  # No limit on column width
 
-data_encoded = pd.get_dummies(data, columns=['Accepts Card', 'Current Provider'])
+# data_encoded = pd.get_dummies(data, columns=['Accepts Card', 'Current Provider'])
 
 print(len(data.columns))
 
+data1 = data
+
+#See number if unique Current Providers
+unique_providers_count = data['Current Provider'].nunique()
+
+# Print the result
+print(f"Total number of unique providers: {unique_providers_count}")
+
+#Make everything to small case as the data mix alphabets
+data['Current Provider'] = data['Current Provider'].str.lower()
+data1['Current Provider'] = data['Current Provider'].str.lower().str.replace(r'[^a-z0-9]', '', regex=True)
 mcc_frequency = data['Current Provider'].value_counts()
 print(mcc_frequency)
+unique_providers_count = data1['Current Provider'].nunique()
 
-# Group 'Current Provider' into two categories: 'None' and 'Other'
+# Print the result
+print(f"Total number of unique providers: {unique_providers_count}")
+
+
+# Set display options
+# Plot the histogram
+import matplotlib.pyplot as plt
+# Get the frequency of each provider
+mcc_frequency = data['Current Provider'].value_counts()
+
+# Plot the bar chart
+plt.figure(figsize=(10, 6))
+mcc_frequency.plot(kind='bar', color='skyblue')
+
+# Add title and labels
+plt.title('Frequency of Current Providers', fontsize=14)
+plt.xlabel('Current Provider', fontsize=12)
+plt.ylabel('Frequency', fontsize=12)
+
+# Rotate x-axis labels for better readability if needed
+plt.xticks(rotation=45, ha='right')
+
+# Show the plot
+plt.tight_layout()
+plt.show()
+
+
+
+
+ 
+# Group 'Current Provider' into two categories: 'None' and 'Other' to make the dataset balanced
 data['Current Provider Grouped'] = data['Current Provider'].apply(
     lambda x: 'None' if x == 'None' else 'Other'
 )
@@ -179,45 +227,82 @@ print(data[['Current Provider', 'Current Provider Grouped']].head())
 
 data = data.drop(columns=['Current Provider'])
 
-
-
-from sklearn.preprocessing import LabelBinarizer
-
-# Initialize LabelBinarizer
-lb_accepts_card = LabelBinarizer()
-lb_current_provider = LabelBinarizer()
-lb_mcc = LabelBinarizer()
-
-# Apply LabelBinarizer to 'Accepts Card', 'Current Provider Grouped', and 'MCC Category'
-accepts_card_encoded = lb_accepts_card.fit_transform(data['Accepts Card'])
-current_provider_encoded = lb_current_provider.fit_transform(data['Current Provider Grouped'])
-mcc_encoded = lb_mcc.fit_transform(data["MCC Category"])
-
-
-print(mcc_encoded.shape)
-# Convert the encoded arrays into DataFrames for easier integration with original data
-accepts_card_df = pd.DataFrame(accepts_card_encoded, columns=[f'Accepts Card_{cls}' for cls in lb_accepts_card.classes_[:1]])
-current_provider_df = pd.DataFrame(current_provider_encoded, columns=[f'Current Provider_{cls}' for cls in lb_current_provider.classes_[:1]])
-mcc_df = pd.DataFrame(mcc_encoded, columns=[f'MCC_{cls}' for cls in lb_mcc.classes_])
-
-print(lb_accepts_card.classes_)
-# Concatenate the original data with the new one-hot encoded columns
-data = pd.concat([data, accepts_card_df, current_provider_df, mcc_df], axis=1)
-# Check the new DataFrame with One-Hot Encoded columns
-print(data.head())
+print(len(data["Current Provider Grouped"]))
 
 print(data.columns)
 
-data1 = data.copy()
-data['Is Registered'] = data['Is Registered'].map({'Yes': 0, 'No': 1})
+numerical_summary = data.describe()
+print("Summary of Numerical Features:")
+print(numerical_summary)
 
-# Check the transformation
-print(data['Is Registered'].head())
-
-data = data.drop(['Is Registered', 'Accepts Card', 'Mastercard Debit', 'MCC Category', 'Current Provider Grouped'], axis=1)
-
-# Check the updated DataFrame
 print(data.head())
+
+mcc_frequency = data['MCC Category'].value_counts()
+print(mcc_frequency)
+
+data.to_csv('data_processing1.csv', index=False)
+
+file_path = 'data_processing1.csv'
+
+# Read the CSV file into a DataFrame
+data1 = pd.read_csv(file_path)
+
+
+# Perform one-hot encoding for the 'MCC Category' column
+mcc_category_encoded = pd.get_dummies(data1['MCC Category'], prefix='MCC_Category')
+
+# Merge the encoded columns back into the original dataframe
+data1 = pd.concat([data1, mcc_category_encoded], axis=1)
+
+# Check the updated dataframe
+print(data1.head())
+
+data1 = data1.drop(columns=['MCC Category'])
+
+mcc_frequency = data['MCC_Category_Agricultural Services'].value_counts()
+print(mcc_frequency)
+
+print(data1.head())
+
+data1['Transaction_per_Unit_Turnover'] = data1['Average Transaction Amount'] / data1['Annual Card Turnover']
+
+# Display the first few rows to check the result
+print(data1[['Annual Card Turnover', 'Average Transaction Amount', 'Transaction_per_Unit_Turnover']].head())
+
+numerical_summary = data1.describe()
+print("Summary of Numerical Features:")
+print(numerical_summary)
+
+data1['Is Registered'] = data1['Is Registered'].map({'Yes': 0, 'No': 1})
+
+mcc_frequency = data['Is Registered'].value_counts()
+print(mcc_frequency)
+
+
+
+
+from sklearn.preprocessing import LabelEncoder
+
+# Create a label encoder
+label_encoder = LabelEncoder()
+
+# Encode 'Registered' and 'Accepts Card' columns
+data1['Registered'] = label_encoder.fit_transform(data1['Is Registered'])
+data1['Accepts Card'] = label_encoder.fit_transform(data1['Accepts Card'])
+
+# Display the updated data
+print(data1[['Registered', 'Accepts Card']].head())
+
+print(data1.head())
+
+data1 = data1.drop(columns=['Registered'])
+data1 = data1.drop(columns=['Mastercard Debit'])
+
+
+
+data1['Current Provider'] = label_encoder.fit_transform(data1['Current Provider Grouped'])
+data1 = data1.drop(columns=['Current Provider Grouped'])
+data1 = data1.drop(columns=['Annual Card Turnover'])
 
 
 import seaborn as sns
@@ -225,7 +310,7 @@ import matplotlib.pyplot as plt
 import scipy.stats as stats
 
 # Calculate the Spearman correlation matrix
-spearman_corr = data.corr(method='spearman')
+spearman_corr = data1.corr(method='spearman')
 
 # Plot the Spearman correlation matrix using a heatmap
 plt.figure(figsize=(12, 10))
@@ -233,12 +318,266 @@ sns.heatmap(spearman_corr, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.
 plt.title('Spearman Correlation Matrix')
 plt.show()
 
+
+from sklearn.preprocessing import RobustScaler
+
+# Initialize the RobustScaler
+scaler = RobustScaler()
+
+# Reshape the data to a 2D array (required for scikit-learn's scaler)
+transaction_values = data1['Transaction_per_Unit_Turnover'].values.reshape(-1, 1)
+
+# Fit and transform the data using RobustScaler
+data1['Transaction_per_Unit_Turnover_RobustScaled'] = scaler.fit_transform(transaction_values)
+
+# Check the result
+print(data1[['Transaction_per_Unit_Turnover', 'Transaction_per_Unit_Turnover_RobustScaled']].head())
+
+
+import matplotlib.pyplot as plt
+
+# Plot the histogram for the scaled values
+plt.figure(figsize=(10, 6))
+plt.hist(data1['Transaction_per_Unit_Turnover_RobustScaled'], bins=100000, edgecolor='black')
+plt.title('Histogram of Scaled Transaction per Unit Turnover')
+plt.xlabel('Scaled Transaction per Unit Turnover')
+plt.ylabel('Frequency')
+plt.grid(True)
+
+# Limit the x-axis to 0 to 400
+plt.xlim(-0.2, 0.3)
+
+# Display the plot
+plt.show()
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Calculate the mean and standard deviation of the scaled data
+mean = data1['Transaction_per_Unit_Turnover_RobustScaled'].mean()
+std_dev = data1['Transaction_per_Unit_Turnover_RobustScaled'].std()
+
+# Set x-limits to filter the data
+x_min, x_max = -30, 30
+
+# Filter the data within the x-limits
+filtered_data = data1[(data1['Transaction_per_Unit_Turnover_RobustScaled'] >= x_min) & 
+                       (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= x_max)]
+
+# Calculate the mean and standard deviation for the filtered data
+filtered_mean = filtered_data['Transaction_per_Unit_Turnover_RobustScaled'].mean()
+filtered_std_dev = filtered_data['Transaction_per_Unit_Turnover_RobustScaled'].std()
+
+# Plotting KDE for Transaction_per_Unit_Turnover_Scaled
+sns.kdeplot(data1['Transaction_per_Unit_Turnover_RobustScaled'])
+plt.title('KDE of Transaction_per_Unit_Turnover_Scaled')
+plt.xlabel('Scaled Transaction per Unit Turnover')
+plt.ylabel('Density')
+plt.xlim(x_min, x_max)
+
+# Add vertical lines for ±1 standard deviation from the filtered mean
+plt.axvline(filtered_mean - filtered_std_dev, color='red', linestyle='--', label=f'Mean - 1σ ({filtered_mean - filtered_std_dev:.2f})')
+plt.axvline(filtered_mean + filtered_std_dev, color='red', linestyle='--', label=f'Mean + 1σ ({filtered_mean + filtered_std_dev:.2f})')
+
+# Optionally, add lines for ±2 standard deviations
+# plt.axvline(filtered_mean - 2*filtered_std_dev, color='blue', linestyle='--', label=f'Mean - 2σ ({filtered_mean - 2*filtered_std_dev:.2f})')
+# plt.axvline(filtered_mean + 2*filtered_std_dev, color='blue', linestyle='--', label=f'Mean + 2σ ({filtered_mean + 2*filtered_std_dev:.2f})')
+
+# Show the legend
+plt.legend()
+
+# Show the plot
+plt.show()
+
+# Output the filtered mean and standard deviation
+print(f"Filtered mean: {filtered_mean:.2f}")
+print(f"Filtered standard deviation: {filtered_std_dev:.2f}")
+
+
+print(data1.columns)
+
+# Dropping the specified columns
+data1 = data1.drop(columns=['Transaction_per_Unit_Turnover', 'Transaction_per_Unit_Turnover_Scaled'])
+
+# Verify that the columns are dropped
+print(data1.head())
+
+
+
+
+from sklearn.preprocessing import RobustScaler
+
+# Initialize the RobustScaler
+robust_scaler = RobustScaler()
+
+# Apply scaling to 'Average Transaction Amount' and 'Total Annual Transaction Fees'
+data1['Average_Transaction_Amount_Scaled'] = robust_scaler.fit_transform(data1[['Average Transaction Amount']])
+data1['Total_Annual_Transaction_Fees_Scaled'] = robust_scaler.fit_transform(data1[['Total Annual Transaction Fees']])
+
+# Verify the scaled data
+print(data1[['Average_Transaction_Amount_Scaled', 'Total_Annual_Transaction_Fees_Scaled']].head())
+
+
+data1 = data1.drop(columns=['Average Transaction Amount', 'Total Annual Transaction Fees'])
+
+# Verify that the columns are dropped
+print(data1.head())
+
+
+data1.to_csv('data_processing_final.csv', index=False)
+
+file_path = 'data_processing_final.csv'
+
+# Read the CSV file into a DataFrame
+data1 = pd.read_csv(file_path)
+
+import numpy as np
+
+# Define the conditions based on 'Transaction_per_Unit_Turnover_RobustScaled'
+conditions = [
+    (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= -2.370),
+    (data1['Transaction_per_Unit_Turnover_RobustScaled'] > -2.370) & (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= 4.87),
+    (data1['Transaction_per_Unit_Turnover_RobustScaled'] > 4.87)
+]
+
+# Define the corresponding values for each condition
+values = ['competitive', 'neutral', 'non-competitive']
+
+# Apply the conditions and assign the results to the new column 'Current pay'
+data1['Current pay'] = np.select(conditions, values, default='Unknown')
+
+# Verify the new column
+print(data1[['Transaction_per_Unit_Turnover_RobustScaled', 'Current pay']].head())
+
+
+from sklearn.preprocessing import MinMaxScaler
+
+# Reshape the column to 2D for the scaler
+scaler = MinMaxScaler()
+
+# Scale the values between 0 and 1
+data1['Transaction_per_Unit_Turnover_Scaled'] = scaler.fit_transform(data1[['Transaction_per_Unit_Turnover']])
+
+# Check the updated data
+print(data1[['Transaction_per_Unit_Turnover', 'Transaction_per_Unit_Turnover_Scaled']].head())
+
+min_value = data1['Transaction_per_Unit_Turnover_Scaled'].max()
+
+sorted_list = data1['Transaction_per_Unit_Turnover_Scaled'].sort_values(ascending=True).tolist()
+
+
+print(len(sorted_list))
+import matplotlib.pyplot as plt
+
+# Plot the histogram for the scaled values
+plt.figure(figsize=(10, 6))
+plt.hist(data1['Transaction_per_Unit_Turnover_Scaled'], bins=1000, edgecolor='black')
+plt.title('Histogram of Scaled Transaction per Unit Turnover')
+plt.xlabel('Scaled Transaction per Unit Turnover')
+plt.ylabel('Frequency')
+plt.grid(True)
+plt.show()
+
+
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Define the bin width
+bin_width = 5.0e-5
+
+# Get the minimum and maximum values from the data
+min_value = data1['Transaction_per_Unit_Turnover'].min()
+max_value = data1['Transaction_per_Unit_Turnover'].max()
+
+# Create the bins based on the bin width
+bins = np.arange(min_value, max_value + bin_width, bin_width)
+
+# Plot the histogram with the specified bins
+counts, bin_edges, _ = plt.hist(data1['Transaction_per_Unit_Turnover'], bins=bins, color='skyblue', edgecolor='black')
+
+# Find the index of the largest bin
+largest_bin_index = np.argmax(counts)
+
+# Get the range of the largest bin
+bin_range_start = bin_edges[largest_bin_index]
+bin_range_end = bin_edges[largest_bin_index + 1]
+
+# Print the range of the largest bin
+print(f"The range of values in the largest bin is: ({bin_range_start}, {bin_range_end})")
+
+# Show the plot
+plt.show()
+
+# Calculate the mean of the 'Transaction_per_Unit_Turnover' column
+mean_value = data1['Transaction_per_Unit_Turnover'].mean()
+
+# Calculate the standard deviation of the 'Transaction_per_Unit_Turnover' column
+std_dev = data1['Transaction_per_Unit_Turnover'].std()
+
+# Print the results
+print(f"The mean of 'Transaction_per_Unit_Turnover' is: {mean_value}")
+print(f"The standard deviation of 'Transaction_per_Unit_Turnover' is: {std_dev}")
+
+
+data1.to_csv('data_processing2.csv', index=False)
+
+file_path = 'data_processing2.csv'
+
+# Read the CSV file into a DataFrame
+data1 = pd.read_csv(file_path)
+
+
+
+
+
+# from sklearn.preprocessing import LabelBinarizer
+
+# # Initialize LabelBinarizer
+# lb_accepts_card = LabelBinarizer()
+# lb_current_provider = LabelBinarizer()
+# lb_mcc = LabelBinarizer()
+
+# # Apply LabelBinarizer to 'Accepts Card', 'Current Provider Grouped', and 'MCC Category'
+# accepts_card_encoded = lb_accepts_card.fit_transform(data['Accepts Card'])
+# current_provider_encoded = lb_current_provider.fit_transform(data['Current Provider Grouped'])
+# mcc_encoded = lb_mcc.fit_transform(data["MCC Category"])
+
+
+# print(mcc_encoded.shape)
+# # Convert the encoded arrays into DataFrames for easier integration with original data
+# accepts_card_df = pd.DataFrame(accepts_card_encoded, columns=[f'Accepts Card_{cls}' for cls in lb_accepts_card.classes_[:1]])
+# current_provider_df = pd.DataFrame(current_provider_encoded, columns=[f'Current Provider_{cls}' for cls in lb_current_provider.classes_[:1]])
+# mcc_df = pd.DataFrame(mcc_encoded, columns=[f'MCC_{cls}' for cls in lb_mcc.classes_])
+
+# print(lb_accepts_card.classes_)
+# # Concatenate the original data with the new one-hot encoded columns
+# data = pd.concat([data, accepts_card_df, current_provider_df, mcc_df], axis=1)
+# # Check the new DataFrame with One-Hot Encoded columns
+# print(data.head())
+
+# print(data.columns)
+
+# data1 = data.copy()
+# data['Is Registered'] = data['Is Registered'].map({'Yes': 0, 'No': 1})
+
+# # Check the transformation
+# print(data['Is Registered'].head())
+
+# data = data.drop(['Is Registered', 'Accepts Card', 'Mastercard Debit', 'MCC Category', 'Current Provider Grouped'], axis=1)
+
+# # Check the updated DataFrame
+# print(data.head())
+
+
+
 data = data.drop(['Annual Card Turnover'], axis=1)
 
 
 # Plot histogram for 'Total Annual Transaction Fees'
 plt.figure(figsize=(12, 10))
-counts, bin_edges, patches = plt.hist(data['Total Annual Transaction Fees'], bins=500, color='skyblue', edgecolor='black')
+counts, bin_edges, patches = plt.hist(data1['Transaction_per_Unit_Turnover'], bins=500, color='skyblue', edgecolor='black')
 bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 
 for center in bin_centers[:20]:  # Limiting to the first 20 bin centers for better visualization
@@ -247,7 +586,7 @@ for center in bin_centers[:20]:  # Limiting to the first 20 bin centers for bett
 plt.title('Histogram of Total Annual Transaction Fees')
 plt.xlabel('Total Annual Transaction Fees')
 plt.ylabel('Frequency')
-plt.xlim(0, 2500) # Set the x-axis limit up to 5000
+# plt.xlim(0, 2500) # Set the x-axis limit up to 5000
 # plt.xticks(range(0, 6000, 500))
 # plt.xticks(bin_centers[::5], rotation=45) 
 plt.yticks(range(0, 1000, 50))
