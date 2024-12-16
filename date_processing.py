@@ -496,303 +496,303 @@ print("CSV file has been saved successfully!")
 
 
 
-mean = mean_filtered
-std_dev = std_dev_filtered/2
-# Define conditions for updating 'Current pay' column
-conditions = [
-    (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= mean - std_dev),  # competitive
-    (data1['Transaction_per_Unit_Turnover_RobustScaled'] > mean - std_dev) & 
-    (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= mean + std_dev),  # neutral
-    (data1['Transaction_per_Unit_Turnover_RobustScaled'] > mean + std_dev)   # non-competitive
-]
+# mean = mean_filtered
+# std_dev = std_dev_filtered/2
+# # Define conditions for updating 'Current pay' column
+# conditions = [
+#     (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= mean - std_dev),  # competitive
+#     (data1['Transaction_per_Unit_Turnover_RobustScaled'] > mean - std_dev) & 
+#     (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= mean + std_dev),  # neutral
+#     (data1['Transaction_per_Unit_Turnover_RobustScaled'] > mean + std_dev)   # non-competitive
+# ]
 
-# Define the corresponding labels
-labels = ['competitive', 'neutral', 'non-competitive']
+# # Define the corresponding labels
+# labels = ['competitive', 'neutral', 'non-competitive']
 
-# Update the 'Current pay' column based on the conditions
-data1['Current pay'] = np.select(conditions, labels, default='non-competitive')
+# # Update the 'Current pay' column based on the conditions
+# data1['Current pay'] = np.select(conditions, labels, default='non-competitive')
 
-# Check the updated 'Current pay' column
-print(data1['Current pay'].value_counts())
+# # Check the updated 'Current pay' column
+# print(data1['Current pay'].value_counts())
 
 
 
-print(data1.columns)
+# print(data1.columns)
 
-# Dropping the specified columns
-data1 = data1.drop(columns=['Transaction_per_Unit_Turnover'])
-# data1 = data1.drop(columns=['Transaction_per_Unit_Turnover', 'Transaction_per_Unit_Turnover_Scaled'])
-# Verify that the columns are dropped
-print(data1.head())
+# # Dropping the specified columns
+# data1 = data1.drop(columns=['Transaction_per_Unit_Turnover'])
+# # data1 = data1.drop(columns=['Transaction_per_Unit_Turnover', 'Transaction_per_Unit_Turnover_Scaled'])
+# # Verify that the columns are dropped
+# print(data1.head())
 
 
 
 
-from sklearn.preprocessing import RobustScaler
+# from sklearn.preprocessing import RobustScaler
 
-# Initialize the RobustScaler
-robust_scaler = RobustScaler()
+# # Initialize the RobustScaler
+# robust_scaler = RobustScaler()
 
-# Apply scaling to 'Average Transaction Amount' and 'Total Annual Transaction Fees'
-data1['Average_Transaction_Amount_Scaled'] = robust_scaler.fit_transform(data1[['Average Transaction Amount']])
-data1['Total_Annual_Transaction_Fees_Scaled'] = robust_scaler.fit_transform(data1[['Total Annual Transaction Fees']])
+# # Apply scaling to 'Average Transaction Amount' and 'Total Annual Transaction Fees'
+# data1['Average_Transaction_Amount_Scaled'] = robust_scaler.fit_transform(data1[['Average Transaction Amount']])
+# data1['Total_Annual_Transaction_Fees_Scaled'] = robust_scaler.fit_transform(data1[['Total Annual Transaction Fees']])
 
-# Verify the scaled data
-print(data1[['Average_Transaction_Amount_Scaled', 'Total_Annual_Transaction_Fees_Scaled']].head())
+# # Verify the scaled data
+# print(data1[['Average_Transaction_Amount_Scaled', 'Total_Annual_Transaction_Fees_Scaled']].head())
 
 
-data1 = data1.drop(columns=['Average Transaction Amount', 'Total Annual Transaction Fees'])
+# data1 = data1.drop(columns=['Average Transaction Amount', 'Total Annual Transaction Fees'])
 
-# Verify that the columns are dropped
-print(data1.head())
+# # Verify that the columns are dropped
+# print(data1.head())
 
 
-data1.to_csv('data_processing_final.csv', index=False)
+# data1.to_csv('data_processing_final.csv', index=False)
 
-file_path = 'data_processing_final.csv'
+# file_path = 'data_processing_final.csv'
 
-# Read the CSV file into a DataFrame
-data1 = pd.read_csv(file_path)
+# # Read the CSV file into a DataFrame
+# data1 = pd.read_csv(file_path)
 
-import numpy as np
+# import numpy as np
 
-# Define the conditions based on 'Transaction_per_Unit_Turnover_RobustScaled'
-conditions = [
-    (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= -2.370),
-    (data1['Transaction_per_Unit_Turnover_RobustScaled'] > -2.370) & (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= 4.87),
-    (data1['Transaction_per_Unit_Turnover_RobustScaled'] > 4.87)
-]
+# # Define the conditions based on 'Transaction_per_Unit_Turnover_RobustScaled'
+# conditions = [
+#     (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= -2.370),
+#     (data1['Transaction_per_Unit_Turnover_RobustScaled'] > -2.370) & (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= 4.87),
+#     (data1['Transaction_per_Unit_Turnover_RobustScaled'] > 4.87)
+# ]
 
-# Define the corresponding values for each condition
-values = ['competitive', 'neutral', 'non-competitive']
+# # Define the corresponding values for each condition
+# values = ['competitive', 'neutral', 'non-competitive']
 
-# Apply the conditions and assign the results to the new column 'Current pay'
-data1['Current pay'] = np.select(conditions, values, default='Unknown')
+# # Apply the conditions and assign the results to the new column 'Current pay'
+# data1['Current pay'] = np.select(conditions, values, default='Unknown')
 
-# Verify the new column
-print(data1[['Transaction_per_Unit_Turnover_RobustScaled', 'Current pay']].head())
+# # Verify the new column
+# print(data1[['Transaction_per_Unit_Turnover_RobustScaled', 'Current pay']].head())
 
-frequency = data1['Current pay'].value_counts()
+# frequency = data1['Current pay'].value_counts()
 
-# Print the frequency count
-print(frequency)
+# # Print the frequency count
+# print(frequency)
 
-print(data1['Transaction_per_Unit_Turnover_RobustScaled'].max())
+# print(data1['Transaction_per_Unit_Turnover_RobustScaled'].max())
 
 
 
 
-from sklearn.preprocessing import MinMaxScaler
+# from sklearn.preprocessing import MinMaxScaler
 
-# Reshape the column to 2D for the scaler
-scaler = MinMaxScaler()
+# # Reshape the column to 2D for the scaler
+# scaler = MinMaxScaler()
 
-# Scale the values between 0 and 1
-data1['Transaction_per_Unit_Turnover_Scaled'] = scaler.fit_transform(data1[['Transaction_per_Unit_Turnover']])
+# # Scale the values between 0 and 1
+# data1['Transaction_per_Unit_Turnover_Scaled'] = scaler.fit_transform(data1[['Transaction_per_Unit_Turnover']])
 
-# Check the updated data
-print(data1[['Transaction_per_Unit_Turnover', 'Transaction_per_Unit_Turnover_Scaled']].head())
+# # Check the updated data
+# print(data1[['Transaction_per_Unit_Turnover', 'Transaction_per_Unit_Turnover_Scaled']].head())
 
-min_value = data1['Transaction_per_Unit_Turnover_Scaled'].max()
+# min_value = data1['Transaction_per_Unit_Turnover_Scaled'].max()
 
-sorted_list = data1['Transaction_per_Unit_Turnover_Scaled'].sort_values(ascending=True).tolist()
+# sorted_list = data1['Transaction_per_Unit_Turnover_Scaled'].sort_values(ascending=True).tolist()
 
 
-print(len(sorted_list))
-import matplotlib.pyplot as plt
+# print(len(sorted_list))
+# import matplotlib.pyplot as plt
 
-# Plot the histogram for the scaled values
-plt.figure(figsize=(10, 6))
-plt.hist(data1['Transaction_per_Unit_Turnover_Scaled'], bins=1000, edgecolor='black')
-plt.title('Histogram of Scaled Transaction per Unit Turnover')
-plt.xlabel('Scaled Transaction per Unit Turnover')
-plt.ylabel('Frequency')
-plt.grid(True)
-plt.show()
+# # Plot the histogram for the scaled values
+# plt.figure(figsize=(10, 6))
+# plt.hist(data1['Transaction_per_Unit_Turnover_Scaled'], bins=1000, edgecolor='black')
+# plt.title('Histogram of Scaled Transaction per Unit Turnover')
+# plt.xlabel('Scaled Transaction per Unit Turnover')
+# plt.ylabel('Frequency')
+# plt.grid(True)
+# plt.show()
 
 
 
-import matplotlib.pyplot as plt
-import numpy as np
+# import matplotlib.pyplot as plt
+# import numpy as np
 
-# Define the bin width
-bin_width = 5.0e-5
+# # Define the bin width
+# bin_width = 5.0e-5
 
-# Get the minimum and maximum values from the data
-min_value = data1['Transaction_per_Unit_Turnover'].min()
-max_value = data1['Transaction_per_Unit_Turnover'].max()
+# # Get the minimum and maximum values from the data
+# min_value = data1['Transaction_per_Unit_Turnover'].min()
+# max_value = data1['Transaction_per_Unit_Turnover'].max()
 
-# Create the bins based on the bin width
-bins = np.arange(min_value, max_value + bin_width, bin_width)
+# # Create the bins based on the bin width
+# bins = np.arange(min_value, max_value + bin_width, bin_width)
 
-# Plot the histogram with the specified bins
-counts, bin_edges, _ = plt.hist(data1['Transaction_per_Unit_Turnover'], bins=bins, color='skyblue', edgecolor='black')
+# # Plot the histogram with the specified bins
+# counts, bin_edges, _ = plt.hist(data1['Transaction_per_Unit_Turnover'], bins=bins, color='skyblue', edgecolor='black')
 
-# Find the index of the largest bin
-largest_bin_index = np.argmax(counts)
+# # Find the index of the largest bin
+# largest_bin_index = np.argmax(counts)
 
-# Get the range of the largest bin
-bin_range_start = bin_edges[largest_bin_index]
-bin_range_end = bin_edges[largest_bin_index + 1]
+# # Get the range of the largest bin
+# bin_range_start = bin_edges[largest_bin_index]
+# bin_range_end = bin_edges[largest_bin_index + 1]
 
-# Print the range of the largest bin
-print(f"The range of values in the largest bin is: ({bin_range_start}, {bin_range_end})")
+# # Print the range of the largest bin
+# print(f"The range of values in the largest bin is: ({bin_range_start}, {bin_range_end})")
 
-# Show the plot
-plt.show()
+# # Show the plot
+# plt.show()
 
-# Calculate the mean of the 'Transaction_per_Unit_Turnover' column
-mean_value = data1['Transaction_per_Unit_Turnover'].mean()
+# # Calculate the mean of the 'Transaction_per_Unit_Turnover' column
+# mean_value = data1['Transaction_per_Unit_Turnover'].mean()
 
-# Calculate the standard deviation of the 'Transaction_per_Unit_Turnover' column
-std_dev = data1['Transaction_per_Unit_Turnover'].std()
+# # Calculate the standard deviation of the 'Transaction_per_Unit_Turnover' column
+# std_dev = data1['Transaction_per_Unit_Turnover'].std()
 
-# Print the results
-print(f"The mean of 'Transaction_per_Unit_Turnover' is: {mean_value}")
-print(f"The standard deviation of 'Transaction_per_Unit_Turnover' is: {std_dev}")
+# # Print the results
+# print(f"The mean of 'Transaction_per_Unit_Turnover' is: {mean_value}")
+# print(f"The standard deviation of 'Transaction_per_Unit_Turnover' is: {std_dev}")
 
 
-data1.to_csv('data_processing2.csv', index=False)
+# data1.to_csv('data_processing2.csv', index=False)
 
-file_path = 'data_processing2.csv'
+# file_path = 'data_processing2.csv'
 
-# Read the CSV file into a DataFrame
-data1 = pd.read_csv(file_path)
+# # Read the CSV file into a DataFrame
+# data1 = pd.read_csv(file_path)
 
 
 
 
 
-# from sklearn.preprocessing import LabelBinarizer
+# # from sklearn.preprocessing import LabelBinarizer
 
-# # Initialize LabelBinarizer
-# lb_accepts_card = LabelBinarizer()
-# lb_current_provider = LabelBinarizer()
-# lb_mcc = LabelBinarizer()
+# # # Initialize LabelBinarizer
+# # lb_accepts_card = LabelBinarizer()
+# # lb_current_provider = LabelBinarizer()
+# # lb_mcc = LabelBinarizer()
 
-# # Apply LabelBinarizer to 'Accepts Card', 'Current Provider Grouped', and 'MCC Category'
-# accepts_card_encoded = lb_accepts_card.fit_transform(data['Accepts Card'])
-# current_provider_encoded = lb_current_provider.fit_transform(data['Current Provider Grouped'])
-# mcc_encoded = lb_mcc.fit_transform(data["MCC Category"])
+# # # Apply LabelBinarizer to 'Accepts Card', 'Current Provider Grouped', and 'MCC Category'
+# # accepts_card_encoded = lb_accepts_card.fit_transform(data['Accepts Card'])
+# # current_provider_encoded = lb_current_provider.fit_transform(data['Current Provider Grouped'])
+# # mcc_encoded = lb_mcc.fit_transform(data["MCC Category"])
 
 
-# print(mcc_encoded.shape)
-# # Convert the encoded arrays into DataFrames for easier integration with original data
-# accepts_card_df = pd.DataFrame(accepts_card_encoded, columns=[f'Accepts Card_{cls}' for cls in lb_accepts_card.classes_[:1]])
-# current_provider_df = pd.DataFrame(current_provider_encoded, columns=[f'Current Provider_{cls}' for cls in lb_current_provider.classes_[:1]])
-# mcc_df = pd.DataFrame(mcc_encoded, columns=[f'MCC_{cls}' for cls in lb_mcc.classes_])
+# # print(mcc_encoded.shape)
+# # # Convert the encoded arrays into DataFrames for easier integration with original data
+# # accepts_card_df = pd.DataFrame(accepts_card_encoded, columns=[f'Accepts Card_{cls}' for cls in lb_accepts_card.classes_[:1]])
+# # current_provider_df = pd.DataFrame(current_provider_encoded, columns=[f'Current Provider_{cls}' for cls in lb_current_provider.classes_[:1]])
+# # mcc_df = pd.DataFrame(mcc_encoded, columns=[f'MCC_{cls}' for cls in lb_mcc.classes_])
 
-# print(lb_accepts_card.classes_)
-# # Concatenate the original data with the new one-hot encoded columns
-# data = pd.concat([data, accepts_card_df, current_provider_df, mcc_df], axis=1)
-# # Check the new DataFrame with One-Hot Encoded columns
-# print(data.head())
+# # print(lb_accepts_card.classes_)
+# # # Concatenate the original data with the new one-hot encoded columns
+# # data = pd.concat([data, accepts_card_df, current_provider_df, mcc_df], axis=1)
+# # # Check the new DataFrame with One-Hot Encoded columns
+# # print(data.head())
 
-# print(data.columns)
+# # print(data.columns)
 
-# data1 = data.copy()
-# data['Is Registered'] = data['Is Registered'].map({'Yes': 0, 'No': 1})
+# # data1 = data.copy()
+# # data['Is Registered'] = data['Is Registered'].map({'Yes': 0, 'No': 1})
 
-# # Check the transformation
-# print(data['Is Registered'].head())
+# # # Check the transformation
+# # print(data['Is Registered'].head())
 
-# data = data.drop(['Is Registered', 'Accepts Card', 'Mastercard Debit', 'MCC Category', 'Current Provider Grouped'], axis=1)
+# # data = data.drop(['Is Registered', 'Accepts Card', 'Mastercard Debit', 'MCC Category', 'Current Provider Grouped'], axis=1)
 
-# # Check the updated DataFrame
-# print(data.head())
+# # # Check the updated DataFrame
+# # print(data.head())
 
 
 
-data = data.drop(['Annual Card Turnover'], axis=1)
+# data = data.drop(['Annual Card Turnover'], axis=1)
 
 
-# Plot histogram for 'Total Annual Transaction Fees'
-plt.figure(figsize=(12, 10))
-counts, bin_edges, patches = plt.hist(data1['Transaction_per_Unit_Turnover'], bins=500, color='skyblue', edgecolor='black')
-bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+# # Plot histogram for 'Total Annual Transaction Fees'
+# plt.figure(figsize=(12, 10))
+# counts, bin_edges, patches = plt.hist(data1['Transaction_per_Unit_Turnover'], bins=500, color='skyblue', edgecolor='black')
+# bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 
-for center in bin_centers[:20]:  # Limiting to the first 20 bin centers for better visualization
-    plt.axvline(x=center, color='red', linestyle='--', linewidth=1)
+# for center in bin_centers[:20]:  # Limiting to the first 20 bin centers for better visualization
+#     plt.axvline(x=center, color='red', linestyle='--', linewidth=1)
 
-plt.title('Histogram of Total Annual Transaction Fees')
-plt.xlabel('Total Annual Transaction Fees')
-plt.ylabel('Frequency')
-# plt.xlim(0, 2500) # Set the x-axis limit up to 5000
-# plt.xticks(range(0, 6000, 500))
-# plt.xticks(bin_centers[::5], rotation=45) 
-plt.yticks(range(0, 1000, 50))
-plt.grid(True)
-plt.show()
+# plt.title('Histogram of Total Annual Transaction Fees')
+# plt.xlabel('Total Annual Transaction Fees')
+# plt.ylabel('Frequency')
+# # plt.xlim(0, 2500) # Set the x-axis limit up to 5000
+# # plt.xticks(range(0, 6000, 500))
+# # plt.xticks(bin_centers[::5], rotation=45) 
+# plt.yticks(range(0, 1000, 50))
+# plt.grid(True)
+# plt.show()
 
-bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+# bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 
-# Get the first 5 bin centers and their corresponding frequencies
-first_5_bin_centers = bin_centers[:5]
-first_5_counts = counts[:5]
+# # Get the first 5 bin centers and their corresponding frequencies
+# first_5_bin_centers = bin_centers[:5]
+# first_5_counts = counts[:5]
 
-# Print the bin centers and their corresponding counts
-for i in range(5):
-    print(f"Bin center: {first_5_bin_centers[i]:.2f}, Frequency: {first_5_counts[i]}")
+# # Print the bin centers and their corresponding counts
+# for i in range(5):
+#     print(f"Bin center: {first_5_bin_centers[i]:.2f}, Frequency: {first_5_counts[i]}")
 
 
-frequency_count = data['Total Annual Transaction Fees'].value_counts().max()
+# frequency_count = data['Total Annual Transaction Fees'].value_counts().max()
 
-print(frequency_count)
+# print(frequency_count)
 
-max_value = data['Total Annual Transaction Fees'].value_counts().idxmax()
-print(f"The value with the highest frequency is: {max_value}")
+# max_value = data['Total Annual Transaction Fees'].value_counts().idxmax()
+# print(f"The value with the highest frequency is: {max_value}")
 
 
-# Calculate the standard deviation (sigma) of the 'Total Annual Transaction Fees'
-sigma = np.std(data['Total Annual Transaction Fees'])
+# # Calculate the standard deviation (sigma) of the 'Total Annual Transaction Fees'
+# sigma = np.std(data['Total Annual Transaction Fees'])
 
-# Define the range within ± sigma of the max value
-lower_bound = max_value - sigma
-upper_bound = max_value + sigma
+# # Define the range within ± sigma of the max value
+# lower_bound = max_value - sigma
+# upper_bound = max_value + sigma
 
-# Filter the values within this range
-filtered_data = data[(data['Total Annual Transaction Fees'] >= lower_bound) & 
-                      (data['Total Annual Transaction Fees'] <= upper_bound)]
+# # Filter the values within this range
+# filtered_data = data[(data['Total Annual Transaction Fees'] >= lower_bound) & 
+#                       (data['Total Annual Transaction Fees'] <= upper_bound)]
 
-# Show the filtered values
-filtered_data['Total Annual Transaction Fees'].value_counts()
+# # Show the filtered values
+# filtered_data['Total Annual Transaction Fees'].value_counts()
 
-print(filtered_data['Total Annual Transaction Fees'].value_counts())
+# print(filtered_data['Total Annual Transaction Fees'].value_counts())
 
 
 
-min_value = data['Total Annual Transaction Fees'].min()
-print(min_value)
+# min_value = data['Total Annual Transaction Fees'].min()
+# print(min_value)
 
-min_row = data[data['Total Annual Transaction Fees'] == data['Total Annual Transaction Fees'].min()]
-print(min_row)
+# min_row = data[data['Total Annual Transaction Fees'] == data['Total Annual Transaction Fees'].min()]
+# print(min_row)
 
-import seaborn as sns
+# import seaborn as sns
 
 
-# Calculate the peak (mode) and standard deviation
-peak_value = data['Total Annual Transaction Fees'].mode()[0]  # The mode of the data
-std_dev = data['Total Annual Transaction Fees'].std()
-std_dev = 2000
+# # Calculate the peak (mode) and standard deviation
+# peak_value = data['Total Annual Transaction Fees'].mode()[0]  # The mode of the data
+# std_dev = data['Total Annual Transaction Fees'].std()
+# std_dev = 2000
 
-# Calculate +/- 1, 2, and 3 sigma ranges
-sigma_1 = peak_value + std_dev
-sigma_2 = peak_value + 2 * std_dev
-sigma_3 = peak_value + 3 * std_dev
+# # Calculate +/- 1, 2, and 3 sigma ranges
+# sigma_1 = peak_value + std_dev
+# sigma_2 = peak_value + 2 * std_dev
+# sigma_3 = peak_value + 3 * std_dev
 
-# Plot the KDE
-plt.figure(figsize=(8, 6))
-sns.kdeplot(data['Total Annual Transaction Fees'], color='blue', shade=True)
-plt.title('Kernel Density Estimate of Total Annual Transaction Fees')
-plt.xlabel('Total Annual Transaction Fees')
-plt.ylabel('Density')
+# # Plot the KDE
+# plt.figure(figsize=(8, 6))
+# sns.kdeplot(data['Total Annual Transaction Fees'], color='blue', shade=True)
+# plt.title('Kernel Density Estimate of Total Annual Transaction Fees')
+# plt.xlabel('Total Annual Transaction Fees')
+# plt.ylabel('Density')
 
-# Display peak value and sigma ranges
-plt.axvline(peak_value, color='red', linestyle='--', label=f'Peak (Mode) = {peak_value:.2f}')
-plt.axvline(sigma_1, color='green', linestyle='--', label=f'+1 Sigma = {sigma_1:.2f}')
-plt.axvline(sigma_2, color='orange', linestyle='--', label=f'+2 Sigma = {sigma_2:.2f}')
-plt.axvline(sigma_3, color='purple', linestyle='--', label=f'+3 Sigma = {sigma_3:.2f}')
-plt.xlim(0, 10000)
-plt.legend()
-plt.grid(True)
-plt.show()
+# # Display peak value and sigma ranges
+# plt.axvline(peak_value, color='red', linestyle='--', label=f'Peak (Mode) = {peak_value:.2f}')
+# plt.axvline(sigma_1, color='green', linestyle='--', label=f'+1 Sigma = {sigma_1:.2f}')
+# plt.axvline(sigma_2, color='orange', linestyle='--', label=f'+2 Sigma = {sigma_2:.2f}')
+# plt.axvline(sigma_3, color='purple', linestyle='--', label=f'+3 Sigma = {sigma_3:.2f}')
+# plt.xlim(0, 10000)
+# plt.legend()
+# plt.grid(True)
+# plt.show()
