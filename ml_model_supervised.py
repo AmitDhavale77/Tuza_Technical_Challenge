@@ -201,4 +201,57 @@ print("Overall Accuracy:", overall_accuracy)
 
 
 
-   
+
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV
+
+# Define the parameter grid for Random Forest
+param_grid = {
+    'n_estimators': [1, 8, 16, 32, 64, 100, 200],
+    'max_depth': [3, 5, 7, None],
+    'min_samples_split': [2, 5, 10],
+    'min_samples_leaf': [1, 2, 4],
+    'max_features': ['auto', 'sqrt', 'log2', None]
+}
+# Initialize the Random Forest classifier
+rf = RandomForestClassifier()
+
+# Perform GridSearchCV
+grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, scoring='accuracy', n_jobs=-1)
+
+# Fit GridSearchCV on training data
+grid_search.fit(X_train, y_train)
+
+# Print the best parameters and the corresponding score
+print("Best parameters:", grid_search.best_params_)
+print("Best cross-validation accuracy:", grid_search.best_score_)
+
+
+# Train the model with the best parameters
+best_rf = grid_search.best_estimator_
+best_rf.fit(X_train, y_train)
+
+# Evaluate the model
+y_pred = best_rf.predict(X_test)
+
+print("Classification Report:")
+print(classification_report(y_test, y_pred))
+
+print("Accuracy Score:", accuracy_score(y_test, y_pred))
+
+import matplotlib.pyplot as plt
+
+# Compute confusion matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+
+# Plot confusion matrix
+plt.figure(figsize=(10, 7))
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=np.unique(y), yticklabels=np.unique(y))
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.title('Confusion Matrix')
+plt.show()
+
+
+
