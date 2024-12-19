@@ -2,6 +2,12 @@ import pandas as pd
 import numpy as np
 import re
 
+pd.set_option('display.max_rows', None)  # No limit on rows
+pd.set_option('display.max_columns', None)  # No limit on columns
+pd.set_option('display.width', None)  # Auto-detect width
+pd.set_option('display.max_colwidth', None)  # No limit on column width
+
+
 file_path = 'data.csv'
 
 data = pd.read_csv(file_path)
@@ -120,7 +126,7 @@ print(data['Mastercard Debit Percentage'][:5])
 
 # Incorporate the fixed part of the fees
 data['Total Annual Transaction Fees'] += (
-    data['Total Annual Transaction Fees'] / data['Average Transaction Amount']
+    data['Annual Card Turnover'] / data['Average Transaction Amount']
 ) * (data['Fixed Charge (p)'] / 100)
 
 # Display the updated DataFrame with the new feature
@@ -161,12 +167,6 @@ print(data.columns)
 print(data.dtypes)
 
 print(data["MCC Category"])
-
-
-pd.set_option('display.max_rows', None)  # No limit on rows
-pd.set_option('display.max_columns', None)  # No limit on columns
-pd.set_option('display.width', None)  # Auto-detect width
-pd.set_option('display.max_colwidth', None)  # No limit on column width
 
 # data_encoded = pd.get_dummies(data, columns=['Accepts Card', 'Current Provider'])
 
@@ -264,10 +264,10 @@ data1 = data1.drop(columns=['MCC Category'])
 
 print(data1.head())
 
-data1['Transaction_per_Unit_Turnover'] = data1['Average Transaction Amount'] / data1['Annual Card Turnover']
+data1['Transaction Fees per Unit Turnover'] = data1['Total Annual Transaction Fees'] / data1['Annual Card Turnover']
 
 # Display the first few rows to check the result
-print(data1[['Annual Card Turnover', 'Average Transaction Amount', 'Transaction_per_Unit_Turnover']].head())
+print(data1[['Annual Card Turnover', 'Average Transaction Amount', 'Transaction Fees per Unit Turnover']].head())
 
 numerical_summary = data1.describe()
 print("Summary of Numerical Features:")
@@ -302,8 +302,10 @@ data1 = data1.drop(columns=['Mastercard Debit'])
 
 data1['Current Provider'] = label_encoder.fit_transform(data1['Current Provider Grouped'])
 data1 = data1.drop(columns=['Current Provider Grouped'])
-data1 = data1.drop(columns=['Annual Card Turnover'])
 
+
+data1.columns = [col.replace('Category_', '') for col in data1.columns]
+print(data1.head())
 
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -313,11 +315,37 @@ import scipy.stats as stats
 spearman_corr = data1.corr(method='spearman')
 
 # Plot the Spearman correlation matrix using a heatmap
-plt.figure(figsize=(12, 10))
-sns.heatmap(spearman_corr, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5, vmin=-1, vmax=1)
+plt.figure(figsize=(13, 9))
+
+sns.heatmap(spearman_corr, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5, vmin=-1, vmax=1, annot_kws={'size': 8})
+
+plt.xticks(rotation=45, ha='right', fontsize=10)  # Rotate x-axis labels
+plt.yticks(fontsize=10)   # Rotate y-axis labels if needed
+
 plt.title('Spearman Correlation Matrix')
+
+plt.tight_layout() 
 plt.show()
 
+
+# Remove the highly correlated feature 
+data1 = data1.drop(columns=['Annual Card Turnover'])
+
+# Again observe the correlation matrix
+spearman_corr = data1.corr(method='spearman')
+
+# Plot the Spearman correlation matrix using a heatmap
+plt.figure(figsize=(13, 9))
+
+sns.heatmap(spearman_corr, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5, vmin=-1, vmax=1, annot_kws={'size': 8})
+
+plt.xticks(rotation=45, ha='right', fontsize=10)  # Rotate x-axis labels
+plt.yticks(fontsize=10)   # Rotate y-axis labels if needed
+
+plt.title('Spearman Correlation Matrix')
+
+plt.tight_layout() 
+plt.show()
 
 from sklearn.preprocessing import RobustScaler
 

@@ -1,50 +1,66 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
 from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import silhouette_score
-from sklearn.manifold import TSNE
-import seaborn as sns
-from itertools import combinations
-import math
+from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import pairwise_distances_argmin_min
+from sklearn.neighbors import NearestNeighbors
 
-pd.set_option('display.max_rows', None)  # No limit on rows
-pd.set_option('display.max_columns', None)  # No limit on columns
-pd.set_option('display.width', None)  # Auto-detect width
-pd.set_option('display.max_colwidth', None)  # No limit on column width
-
-
+# Load the dataset
 file_path = 'updated_transaction_data_withlabels.csv'
-
-# Read the CSV file into a DataFrame
 data = pd.read_csv(file_path)
 
-print(data.head())
-
-print(data.columns)
-
+# Separate the target column and features
 label_column = 'Current pay'  
 X = data.drop(columns=[label_column])  # Features
-y = data[label_column]  # Target labels (already encoded)
+y = data[label_column]  # Target labels
 
-print(X.columns)
-kmeans = KMeans(n_clusters=3, random_state=42)
-data['Cluster'] = kmeans.fit_predict(X)
+# Convert categorical labels to numeric
+le = LabelEncoder()
+y_encoded = le.fit_transform(y)
 
-feature1 = X.columns[-1]
-feature2 = X.columns[-5]
+# Split data into labeled and unlabeled data
+n_labeled = int(0.1 * len(y))  # Using only 10% of the data as labeled
+y_unlabeled = np.copy(y_encoded)
+y_unlabeled[n_labeled:] = -1  # Masking the labels as unlabeled (-1)
 
-# Plotting pairwise combinations of features
-plt.figure(figsize=(8, 6))
-sns.scatterplot(x=data[feature1], y=data[feature2], hue=data['Cluster'], palette='viridis', s=100, alpha=0.7, marker='o')
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y_unlabeled, test_size=0.2, random_state=42)
 
-# Title and labels
-plt.title(f'Cluster of {feature1} vs {feature2}')
-plt.xlabel(feature1)
-plt.ylabel(feature2)
-plt.legend(title='Cluster')
+# Perform KMeans clustering on the entire data
+n_clusters = 3
+kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+kmeans.fit(X_train)
 
-# Show the plot
+# Visualize the clusters
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set(style="white", palette="muted")
+
+# Scatter plot for two random features (for simplicity)
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x=X_train.iloc[:, -1], y=X_train.iloc[:, -2], hue=kmeans.labels_, palette="Set1")
+plt.title('K-Means Clustering on the Data (Semi-supervised)')
+plt.xlabel('Feature 1')
+plt.ylabel('Feature 2')
 plt.show()
+
+# Optionally: Compare clustering with actual labels if available
+# Only consider the labeled data for comparison
+y_train_labeled = y_train[y_train != -1]
+y_pred_labeled = kmeans.labels_[:len(y_train_labeled)]
+
+# Accuracy can be computed by matching clusters with known labels (optional)
+accuracy = accuracy_score(y_train_labeled, y_pred_labeled)
+print(f'Clustering Accuracy: {accuracy * 100:.2f}%')
+
+# For visualization, we can also map the predicted clusters to actual labels and display it
+y_train_pred = kmeans.predict(X_train)
+
+# Display the predicted clusters alongside actual labels
+clustered_data = X_train.copy()
+clustered_data['Cluster'] = y_train_pred
+clustered_data['Actual Label'] = y_train
+
+print(clustered_data.head())
