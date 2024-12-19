@@ -23,9 +23,13 @@ print(data.head())
 
 print(data.columns)
 
-label_column = 'Current pay'  
+label_column = 'Current pricing'  
 
-X = data.drop(columns=[label_column, 'Transaction_per_Unit_Turnover_RobustScaled'])  # Drop target column to get features
+
+X = data.drop(columns=[label_column])
+
+
+#X = data.drop(columns=[label_column, 'Transaction Fees per Unit Turnover_Scaled'])  # Drop target column to get features
 y = data[label_column]  # Target column
 
 # Data preprocessing: Scale the features
