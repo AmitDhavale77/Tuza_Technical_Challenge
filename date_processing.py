@@ -347,139 +347,78 @@ plt.title('Spearman Correlation Matrix')
 plt.tight_layout() 
 plt.show()
 
-from sklearn.preprocessing import RobustScaler
+from sklearn.preprocessing import RobustScaler, MinMaxScaler, StandardScaler
 
 # Initialize the RobustScaler
-scaler = RobustScaler()
+scaler = MinMaxScaler()
 
 # Reshape the data to a 2D array (required for scikit-learn's scaler)
-transaction_values = data1['Transaction_per_Unit_Turnover'].values.reshape(-1, 1)
+transaction_values = data1['Transaction Fees per Unit Turnover'].values.reshape(-1, 1)
 
 # Fit and transform the data using RobustScaler
-data1['Transaction_per_Unit_Turnover_RobustScaled'] = scaler.fit_transform(transaction_values)
+data1['Transaction Fees per Unit Turnover_Scaled'] = scaler.fit_transform(transaction_values)
 
 # Check the result
-print(data1[['Transaction_per_Unit_Turnover', 'Transaction_per_Unit_Turnover_RobustScaled']].head())
+print(data1[['Transaction Fees per Unit Turnover', 'Transaction Fees per Unit Turnover_Scaled']].head())
 
+print(data1[['Transaction Fees per Unit Turnover', 'Total Annual Transaction Fees']])
 
 import matplotlib.pyplot as plt
 
-# Filter the data within the specified range
-filtered_data = data1[(data1['Transaction_per_Unit_Turnover_RobustScaled'] >= -0.2) &
-                      (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= 0)]
-
-# Calculate the mean and standard deviation for the filtered data
-mean_filtered = filtered_data['Transaction_per_Unit_Turnover_RobustScaled'].mean()
-std_dev_filtered = filtered_data['Transaction_per_Unit_Turnover_RobustScaled'].std()
-
-# Plotting the histogram for Transaction_per_Unit_Turnover_RobustScaled
 plt.figure(figsize=(10, 6))
-plt.hist(data1['Transaction_per_Unit_Turnover_RobustScaled'], bins=5000, edgecolor='black')
-
-# Title and labels
-plt.title('Histogram of Scaled Transaction per Unit Turnover')
-plt.xlabel('Scaled Transaction per Unit Turnover')
-plt.ylabel('Frequency')
-plt.grid(True)
-
-# Limit the x-axis to -0.2 to 0.2
-plt.xlim(-0.2, 0)
-
-# Add vertical lines for mean and standard deviations
-plt.axvline(mean_filtered, color='red', linestyle='--', label=f'Mean: {mean_filtered:.4f}')
-plt.axvline(mean_filtered - std_dev_filtered/2, color='blue', linestyle='--', label=f'Mean - 1σ: {mean_filtered - std_dev_filtered:.4f}')
-plt.axvline(mean_filtered + std_dev_filtered/2, color='blue', linestyle='--', label=f'Mean + 1σ: {mean_filtered + std_dev_filtered:.4f}')
-
-# Show the legend
-plt.legend()
-
-# Display the plot
+plt.hist(data1['Transaction Fees per Unit Turnover'], bins=200, color='skyblue', edgecolor='black', alpha=0.7)
+plt.title("Histogram of Transaction Fees per Unit Turnover", fontsize=14)
+plt.xlabel("Transaction Fees per Unit Turnover", fontsize=12)
+plt.ylabel("Frequency", fontsize=12)
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.xlim(0, 0.02)
+# plt.xlim(0, 10000)
+plt.tight_layout()
 plt.show()
 
-filtered_data = data1[(data1['Transaction_per_Unit_Turnover_RobustScaled'] >= -0.2) &
-                      (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= 0.2)]
+# mean = data1['Transaction Fees per Unit Turnover'].mean()
+# std = data1['Transaction Fees per Unit Turnover'].std()
 
-# Calculate the mean and standard deviation of the filtered data
-mean_filtered = filtered_data['Transaction_per_Unit_Turnover_RobustScaled'].mean()
-std_dev_filtered = filtered_data['Transaction_per_Unit_Turnover_RobustScaled'].std()
+# # Plot the histogram
+# plt.figure(figsize=(10, 6))
+# plt.hist(data1['Transaction Fees per Unit Turnover'], bins=200, color='skyblue', edgecolor='black', alpha=0.7)
+# plt.title("Histogram of Transaction Fees per Unit Turnover", fontsize=14)
+# plt.xlabel("Transaction Fees per Unit Turnover", fontsize=12)
+# plt.ylabel("Frequency", fontsize=12)
 
-# Output the results
-print(f'Mean of filtered data: {mean_filtered}')
-print(f'Standard Deviation of filtered data: {std_dev_filtered}')
+# # Add mean line
+# plt.axvline(mean, color='red', linestyle='--', linewidth=1.5, label=f'Mean: {mean:.4f}')
 
+# # Add ±1σ lines
+# plt.axvline(mean - std, color='green', linestyle='--', linewidth=1.5, label=f'Mean - 1σ: {mean - std:.4f}')
+# plt.axvline(mean + std, color='green', linestyle='--', linewidth=1.5, label=f'Mean + 1σ: {mean + std:.4f}')
 
-
-
-import seaborn as sns
-import matplotlib.pyplot as plt
-import numpy as np
-
-# Calculate the mean and standard deviation of the scaled data
-mean = data1['Transaction_per_Unit_Turnover_RobustScaled'].mean()
-std_dev = data1['Transaction_per_Unit_Turnover_RobustScaled'].std()
-
-# Set x-limits to filter the data
-x_min, x_max = -30, 30
-
-# Filter the data within the x-limits
-filtered_data = data1[(data1['Transaction_per_Unit_Turnover_RobustScaled'] >= x_min) & 
-                       (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= x_max)]
-
-# Calculate the mean and standard deviation for the filtered data
-filtered_mean = filtered_data['Transaction_per_Unit_Turnover_RobustScaled'].mean()
-filtered_std_dev = filtered_data['Transaction_per_Unit_Turnover_RobustScaled'].std()
-
-# Plotting KDE for Transaction_per_Unit_Turnover_Scaled
-sns.kdeplot(data1['Transaction_per_Unit_Turnover_RobustScaled'])
-plt.title('KDE of Transaction_per_Unit_Turnover_Scaled')
-plt.xlabel('Scaled Transaction per Unit Turnover')
-plt.ylabel('Density')
-plt.xlim(x_min, x_max)
-
-# Add vertical lines for ±1 standard deviation from the filtered mean
-plt.axvline(filtered_mean - filtered_std_dev, color='red', linestyle='--', label=f'Mean - 1σ ({filtered_mean - filtered_std_dev:.2f})')
-plt.axvline(filtered_mean + filtered_std_dev, color='red', linestyle='--', label=f'Mean + 1σ ({filtered_mean + filtered_std_dev:.2f})')
-
-# Optionally, add lines for ±2 standard deviations
-# plt.axvline(filtered_mean - 2*filtered_std_dev, color='blue', linestyle='--', label=f'Mean - 2σ ({filtered_mean - 2*filtered_std_dev:.2f})')
-# plt.axvline(filtered_mean + 2*filtered_std_dev, color='blue', linestyle='--', label=f'Mean + 2σ ({filtered_mean + 2*filtered_std_dev:.2f})')
-
-# Show the legend
-plt.legend()
-
-# Show the plot
-plt.show()
-
-# Output the filtered mean and standard deviation
-print(f"Filtered mean: {filtered_mean:.2f}")
-print(f"Filtered standard deviation: {filtered_std_dev:.2f}")
-
-# mean = data1['Transaction_per_Unit_Turnover_RobustScaled'].mean()
-# std_dev = data1['Transaction_per_Unit_Turnover_RobustScaled'].std()
-#mean_filtered - std_dev_filtered
-
-import matplotlib.pyplot as plt
-import numpy as np
+# # Optional grid and layout adjustments
+# plt.grid(axis='y', linestyle='--', alpha=0.7)
+# plt.xlim(0, 0.02)
+# plt.legend(loc='upper right', fontsize=10)
+# plt.tight_layout()
+# plt.show()
 
 # Calculate quartiles (Q1, Q2, Q3)
-Q1 = data1['Transaction_per_Unit_Turnover_RobustScaled'].quantile(0.25)
-Q2 = data1['Transaction_per_Unit_Turnover_RobustScaled'].quantile(0.50)  # Median
-Q3 = data1['Transaction_per_Unit_Turnover_RobustScaled'].quantile(0.75)
+Q1 = data1['Transaction Fees per Unit Turnover'].quantile(0.25)
+Q2 = data1['Transaction Fees per Unit Turnover'].quantile(0.50)  # Median
+Q3 = data1['Transaction Fees per Unit Turnover'].quantile(0.75)
 
 # Plotting the histogram
 plt.figure(figsize=(10, 6))
-plt.hist(data1['Transaction_per_Unit_Turnover_RobustScaled'], bins=50000, edgecolor='black', alpha=0.7)
+plt.hist(data1['Transaction Fees per Unit Turnover'], bins=200, edgecolor='black', alpha=0.7)
 
 # Add lines for Q1, Q2, Q3
-plt.axvline(Q1, color='red', linestyle='--', label=f'Q1 ({Q1:.2f})')
-plt.axvline(Q2, color='green', linestyle='--', label=f'Q2 (Median) ({Q2:.2f})')
-plt.axvline(Q3, color='blue', linestyle='--', label=f'Q3 ({Q3:.2f})')
+plt.axvline(Q1, color='red', linestyle='--', label=f'Q1 ({Q1:.4f})')
+plt.axvline(Q2, color='green', linestyle='--', label=f'Q2 (Median) ({Q2:.4f})')
+plt.axvline(Q3, color='blue', linestyle='--', label=f'Q3 ({Q3:.4f})')
 
 # Title and labels
 plt.title('Histogram of Transaction per Unit Turnover (Scaled)')
 plt.xlabel('Scaled Transaction per Unit Turnover')
 plt.ylabel('Frequency')
-plt.xlim(-0.2, 0.2)
+plt.xlim(0, 0.02)
 # Show legend
 plt.legend()
 
@@ -487,28 +426,48 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
-
 # Calculate quartiles (Q1, Q2, Q3)
-Q1 = data1['Transaction_per_Unit_Turnover_RobustScaled'].quantile(0.25)
-Q2 = data1['Transaction_per_Unit_Turnover_RobustScaled'].quantile(0.50)  # Median
-Q3 = data1['Transaction_per_Unit_Turnover_RobustScaled'].quantile(0.75)
+Q1 = data1['Transaction Fees per Unit Turnover'].quantile(0.25)
+Q2 = data1['Transaction Fees per Unit Turnover'].quantile(0.50)  # Median
+Q3 = data1['Transaction Fees per Unit Turnover'].quantile(0.75)
 
 # Define conditions based on quartiles
 conditions = [
-    (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= Q1),  # competitive
-    (data1['Transaction_per_Unit_Turnover_RobustScaled'] > Q1) & 
-    (data1['Transaction_per_Unit_Turnover_RobustScaled'] <= Q3),  # neutral
-    (data1['Transaction_per_Unit_Turnover_RobustScaled'] > Q3)   # non-competitive
+    (data1['Transaction Fees per Unit Turnover'] <= Q1),  # competitive
+    (data1['Transaction Fees per Unit Turnover'] > Q1) & 
+    (data1['Transaction Fees per Unit Turnover'] <= Q3),  # neutral
+    (data1['Transaction Fees per Unit Turnover'] > Q3)   # non-competitive
 ]
 
 # Define corresponding labels
 labels = ['Competitive', 'Neutral', 'Non-Competitive']
 
 # Apply conditions and assign labels to the 'Current pay' column
-data1['Current pay'] = np.select(conditions, labels)
+data1['Current pricing'] = np.select(conditions, labels)
 
 # Check the frequency of each label
-print(data1['Current pay'].value_counts())
+print(data1['Current pricing'].value_counts())
+
+
+from sklearn.preprocessing import MinMaxScaler
+
+# Initialize the MinMaxScaler
+scaler = MinMaxScaler()
+
+# Apply MinMax scaling to the selected columns
+data1[['Average Transaction Amount Scaled', 'Total Annual Transaction Fees Scaled']] = scaler.fit_transform(
+    data1[['Average Transaction Amount', 'Total Annual Transaction Fees']]
+)
+
+# Check the scaled data
+print(data1[['Average Transaction Amount Scaled', 'Total Annual Transaction Fees Scaled']].head())
+
+# Drop the specified columns
+data1 = data1.drop(columns=['Transaction Fees per Unit Turnover', 'Average Transaction Amount', 'Total Annual Transaction Fees'])
+
+
+
+print(data1.head())
 
 data1.to_csv('updated_transaction_data_withlabels.csv', index=False)
 
