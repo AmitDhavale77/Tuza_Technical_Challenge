@@ -10,25 +10,39 @@ from sklearn.metrics import confusion_matrix
 from sklearn.svm import SVC
 
 
-pd.set_option('display.max_rows', None)  # No limit on rows
-pd.set_option('display.max_columns', None)  # No limit on columns
-pd.set_option('display.width', None)  # Auto-detect width
-pd.set_option('display.max_colwidth', None)  # No limit on column width
-
-
-file_path = 'updated_transaction_data_withlabels.csv'
+file_path = 'updated_transaction_data_withlabels3.csv'
 
 # Read the CSV file into a DataFrame
 data = pd.read_csv(file_path)
 
-print(data.head())
+#print(data["Current Provider"].value_counts())
 
 print(data.columns)
 
 label_column = 'Current pricing'  
-# , 'Transaction Fees per Unit Turnover_Scaled'
-X = data.drop(columns=[label_column])  # Drop target column to get features
-y = data[label_column]  # Target column
+#X = data.drop(columns=[label_column])  # Features
+data['encoded__Miscellaneous Stores'] = data['encoded__Miscellaneous Stores'].astype(int)
+
+# 'Annual Card Turnover Scaled',
+# 'Visa Debit Scaled',
+# 'Visa Credit Scaled',
+# 'Visa Business Debit Scaled',
+
+X = data.drop(columns=[label_column,
+'Transaction Fees per Unit Turnover_Scaled',
+'Visa Debit Scaled',
+'Total Annual Transaction Fees Scaled'
+])
+
+print(X.head())
+  # Features
+y = data[label_column]  # Target labels (already encoded)
+
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.ensemble import GradientBoostingClassifier
+
+le = LabelEncoder()
+y = le.fit_transform(y)
 
 # Data preprocessing: Scale the features
 

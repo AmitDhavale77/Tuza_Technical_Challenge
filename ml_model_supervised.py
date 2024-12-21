@@ -1,9 +1,16 @@
 import pandas as pd
-import numpy as np
-import re
-from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, accuracy_score
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import (
+    RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier, VotingClassifier
+)
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+from sklearn.metrics import make_scorer, precision_score, recall_score
+from sklearn.model_selection import cross_val_predict
 
 
 pd.set_option('display.max_rows', None)  # No limit on rows
@@ -12,7 +19,7 @@ pd.set_option('display.width', None)  # Auto-detect width
 pd.set_option('display.max_colwidth', None)  # No limit on column width
 
 
-file_path = 'updated_transaction_data_withlabels1.csv'
+file_path = 'updated_transaction_data_withlabels3.csv'
 
 # Read the CSV file into a DataFrame
 data = pd.read_csv(file_path)
@@ -23,10 +30,26 @@ print(data.columns)
 
 label_column = 'Current pricing'  
 #X = data.drop(columns=[label_column])  # Features
+data['encoded__Miscellaneous Stores'] = data['encoded__Miscellaneous Stores'].astype(int)
 
+# 'Annual Card Turnover Scaled',
+# 'Visa Debit Scaled',
+# 'Visa Credit Scaled',
+# 'Visa Business Debit Scaled',
 
-X = data.drop(columns=[label_column,'Transaction Fees per Unit Turnover_Scaled'])  # Features
+X = data.drop(columns=[label_column,
+'Transaction Fees per Unit Turnover_Scaled',
+'Visa Debit Scaled',
+'Total Annual Transaction Fees Scaled'
+])
+  # Features
 y = data[label_column]  # Target labels (already encoded)
+
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.ensemble import GradientBoostingClassifier
+
+le = LabelEncoder()
+y = le.fit_transform(y)
 
 len(X.iloc[0])
 # Split the data into training and test sets
@@ -38,215 +61,144 @@ print(f"Length of X_test: {len(X_test)}")
 print(f"Length of y_train: {len(y_train)}")
 print(f"Length of y_test: {len(y_test)}")
 
-print(y_test)
-# Train the Random Forest Classifier
-model = RandomForestClassifier(random_state=42) #random_state=42 a seed for random number generator
-model.fit(X_train, y_train)
+rf_clf = RandomForestClassifier(random_state=42, n_estimators=100)
 
-# Predict on the test set
-y_pred = model.predict(X_test)
+# Train the model using cross-validation
+cv_scores = cross_val_score(rf_clf, X, y, cv=5, scoring='accuracy')  # 5-fold CV
+# Define precision and recall scorers
+precision_scorer = make_scorer(precision_score, average='weighted')  # 'weighted' averages precision for multi-class problems
+recall_scorer = make_scorer(recall_score, average='weighted')  # 'weighted' averages recall for multi-class problems
 
-# Evaluate the model
-print("Classification Report:")
-print(classification_report(y_test, y_pred))
+# Perform cross-validation with precision and recall scores
+cv_precision = cross_val_score(rf_clf, X, y, cv=5, scoring=precision_scorer)
+cv_recall = cross_val_score(rf_clf, X, y, cv=5, scoring=recall_scorer)
 
-print("Accuracy Score:")
-print(accuracy_score(y_test, y_pred))
+# Train the model on the full training set
+rf_clf.fit(X_train, y_train)
 
-print(y_test)
-print(y_pred)
+# Make predictions
+y_pred = rf_clf.predict(X_test)
 
+print(f"\nCross-Validation Accuracy Scores: {cv_scores}")
+print(f"Mean CV Accuracy: {cv_scores.mean():.4f}")
+print(f"Standard Deviation of CV Accuracy: {cv_scores.std():.4f}")
 
+print(f"Cross-Validation Precision Scores: {cv_precision}")
+print(f"Mean CV Precision: {cv_precision.mean():.4f}")
+print(f"Standard Deviation of CV Precision: {cv_precision.std():.4f}")
 
-from sklearn.model_selection import cross_val_score, StratifiedKFold
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import precision_score, recall_score, f1_score
+print(f"Cross-Validation Recall Scores: {cv_recall}")
+print(f"Mean CV Recall: {cv_recall.mean():.4f}")
+print(f"Standard Deviation of CV Recall: {cv_recall.std():.4f}")
 
-# Initialize the classifier
-model = RandomForestClassifier(random_state=42)
+# Perform cross-validation to get predictions on all folds
+y_pred_cv = cross_val_predict(rf_clf, X, y, cv=5)
 
-# Define a stratified k-fold cross-validator
-kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-
-# Perform cross-validation
-cv_scores = cross_val_score(model, X, y, cv=kf, scoring='accuracy')
-
-# Output cross-validation results
-print(f"Cross-Validation Accuracy Scores: {cv_scores}")
-print(f"Mean Accuracy: {cv_scores.mean():.4f}")
-print(f"Standard Deviation of Accuracy: {cv_scores.std():.4f}")
-
-overall_cm = np.zeros((len(np.unique(y)), len(np.unique(y))), dtype=int)
-
-# Detailed evaluation on one split with confusion matrix
-for train_index, test_index in kf.split(X, y):
-    X_train, X_test = X.iloc[train_index], X.iloc[test_index]
-    y_train, y_test = y.iloc[train_index], y.iloc[test_index]
-    
-    model.fit(X_train, y_train)
-    y_pred = model.predict(X_test)
-    
-    print("\nClassification Report:")
-    print(classification_report(y_test, y_pred))
-    print("Fold Accuracy:", accuracy_score(y_test, y_pred))
-    
-    # Compute and print confusion matrix
-    cm = confusion_matrix(y_test, y_pred)
-    overall_cm += cm
-
-print("Overall Confusion Matrix:")
-print(overall_cm)  
-
-
-# Define the hyperparameter grid for tuning
-param_grid = {
-    'n_estimators': [1, 8, 16, 32, 64, 100, 200],
-    'max_depth': [3, 5, 7, None],
-    'min_samples_split': [2, 5, 10],
-    'min_samples_leaf': [1, 2, 4],
-    'max_features': ['auto', 'sqrt', 'log2', None]
-}
-
-
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import GridSearchCV
-
-# Initialize the Random Forest classifier
-rf = RandomForestClassifier()
-
-# Perform GridSearchCV
-grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, scoring='accuracy', n_jobs=-1)
-
-# Fit GridSearchCV on training data
-grid_search.fit(X_train, y_train)
-
-# Print the best parameters and the corresponding score
-print("Best parameters:", grid_search.best_params_)
-print("Best cross-validation accuracy:", grid_search.best_score_)
-
-
-# Train the model with the best parameters
-best_rf = grid_search.best_estimator_
-best_rf.fit(X_train, y_train)
-
-# Evaluate the model
-y_pred = best_rf.predict(X_test)
-
-print("Classification Report:")
-print(classification_report(y_test, y_pred))
-
-print("Accuracy Score:", accuracy_score(y_test, y_pred))
-
+# Calculate the overall confusion matrix
+import seaborn as sns
 import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.metrics import confusion_matrix
 
-# Compute confusion matrix
-conf_matrix = confusion_matrix(y_test, y_pred)
+# Assuming y and y_pred_cv are already defined
+cv_conf_matrix = confusion_matrix(y, y_pred_cv)
 
-# Plot confusion matrix
-plt.figure(figsize=(10, 7))
-sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=np.unique(y), yticklabels=np.unique(y))
-plt.xlabel('Predicted')
-plt.ylabel('Actual')
-plt.title('Confusion Matrix')
+# Define the labels
+labels = ['competitive', 'neutral', 'non-competitive']
+
+# Plot the heatmap
+plt.figure(figsize=(8, 6))
+sns.heatmap(
+    cv_conf_matrix, 
+    annot=True, 
+    fmt='d', 
+    cmap='Blues', 
+    xticklabels=labels, 
+    yticklabels=labels
+)
+plt.xlabel('Predicted', fontweight='bold')
+plt.ylabel('Actual', fontweight='bold')
+plt.title('Cross-Validation Confusion Matrix', fontweight='bold')
 plt.show()
 
 
 
 
-# # Define outer StratifiedKFold cross-validation
-# outer_kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-
-# # Store cross-validation scores
-# cv_scores = []
-# overall_cm = np.zeros((len(np.unique(y)), len(np.unique(y))), dtype=int)
-
-# # Perform nested cross-validation with hyperparameter tuning
-# for train_index, test_index in outer_kf.split(X, y):
-#     X_train_cv, X_test_cv = X.iloc[train_index], X.iloc[test_index]
-#     y_train_cv, y_test_cv = y.iloc[train_index], y.iloc[test_index]
-
-#     # Define the inner StratifiedKFold cross-validation for hyperparameter tuning
-#     inner_kf = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
-
-#     # Perform GridSearchCV for hyperparameter tuning inside the inner loop
-#     grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=inner_kf, scoring='accuracy', n_jobs=-1)
-#     grid_search.fit(X_train_cv, y_train_cv)
-
-#     # Best hyperparameters from GridSearchCV
-#     print(f"Best parameters: {grid_search.best_params_}")
-
-#     # Train the model with the best parameters
-#     best_model = grid_search.best_estimator_
-
-#     # Predict on the test set of the outer fold
-#     y_pred_cv = best_model.predict(X_test_cv)
-
-#     # Evaluate the performance
-#     print("\nClassification Report (Outer fold):")
-#     print(classification_report(y_test_cv, y_pred_cv))
-#     print("Accuracy:", accuracy_score(y_test_cv, y_pred_cv))
-
-#     # Compute and accumulate confusion matrix
-#     cm = confusion_matrix(y_test_cv, y_pred_cv)
-#     overall_cm += cm
-#     cv_scores.append(accuracy_score(y_test_cv, y_pred_cv))
-
-
-# # Best parameters: {'max_depth': None, 'max_features': None, 'min_samples_leaf': 1, 'min_samples_split': 5, 'n_estimators': 100}
-
-# best_model = RandomForestClassifier(random_state=42, min_samples_leaf=1, min_samples_split=5, n_estimators=100)
-
-
-# # Define a stratified k-fold cross-validator
-# kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-
-# # Perform cross-validation
-# cv_scores = cross_val_score(model, X, y, cv=kf, scoring='accuracy')
-
-# # Output cross-validation results
-# print(f"Cross-Validation Accuracy Scores: {cv_scores}")
-# print(f"Mean Accuracy: {cv_scores.mean():.4f}")
-# print(f"Standard Deviation of Accuracy: {cv_scores.std():.4f}")
-
-# overall_cm = np.zeros((len(np.unique(y)), len(np.unique(y))), dtype=int)
-
-# # Detailed evaluation on one split with confusion matrix
-# for train_index, test_index in kf.split(X, y):
-#     X_train, X_test = X.iloc[train_index], X.iloc[test_index]
-#     y_train, y_test = y.iloc[train_index], y.iloc[test_index]
-    
-#     best_model.fit(X_train, y_train)
-#     y_pred = best_model.predict(X_test)
-    
-#     print("\nClassification Report:")
-#     print(classification_report(y_test, y_pred))
-#     print("Fold Accuracy:", accuracy_score(y_test, y_pred))
-    
-#     # Compute and print confusion matrix
-#     cm = confusion_matrix(y_test, y_pred)
-#     overall_cm += cm
-
-# print("Overall Confusion Matrix:")
-# print(overall_cm)  
 
 
 
 
-# # Calculate precision, recall, and f1-score for each class using the overall confusion matrix
-# precision = overall_cm.diagonal() / overall_cm.sum(axis=0)
-# recall = overall_cm.diagonal() / overall_cm.sum(axis=1)
-# f1 = 2 * (precision * recall) / (precision + recall)
-# overall_accuracy = np.sum(overall_cm.diagonal()) / np.sum(overall_cm)
 
-# # Print the results
-# print("Precision for each class:", precision)
-# print("Recall for each class:", recall)
-# print("F1-Score for each class:", f1)
 
-# print("Total precision:", np.mean(precision))
-# print("Total recall:", np.mean(recall))
-# print("Total F1 score:", np.mean(f1))
-# print("Overall Accuracy:", overall_accuracy)
+# Evaluate the model on the test set
+print("\nConfusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+
+# Calculate and display accuracy on the test set
+test_accuracy = accuracy_score(y_test, y_pred)
+print(f"\nTest Set Accuracy: {test_accuracy:.4f}")
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+# Define individual classifiers
+rf_clf = RandomForestClassifier(random_state=42, n_estimators=100)
+gb_clf = GradientBoostingClassifier(random_state=42)
+ada_clf = AdaBoostClassifier(random_state=42)
+logreg_clf = LogisticRegression(random_state=42, max_iter=1000)
+svc_clf = SVC(probability=True, random_state=42)  # Enable probability for soft voting
+dt_clf = DecisionTreeClassifier(random_state=42)
+nb_clf = GaussianNB()
+
+# Combine classifiers using VotingClassifier
+voting_clf = VotingClassifier(
+    estimators=[
+        ('rf', rf_clf),
+        ('gb', gb_clf),
+        ('logreg', logreg_clf),
+        ('svc', svc_clf),
+        ('nb', nb_clf)
+    ],
+    voting='soft'  # Use 'soft' voting for probability-based aggregation
+)
+
+# Train the VotingClassifier
+cv_scores = cross_val_score(voting_clf, X_train, y_train, cv=5, scoring='accuracy')  # 5-fold CV
+
+# Train the model on the full training set
+voting_clf.fit(X_train, y_train)
+
+# Make predictions
+y_pred = voting_clf.predict(X_test)
+
+print(f"\nCross-Validation Accuracy Scores: {cv_scores}")
+print(f"Mean CV Accuracy: {cv_scores.mean():.4f}")
+print(f"Standard Deviation of CV Accuracy: {cv_scores.std():.4f}")
+
+
+# Evaluate the model on the test set
+print("\nConfusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+
+# Display cross-validation results
+
+# Calculate and display accuracy on the test set
+test_accuracy = accuracy_score(y_test, y_pred)
+print(f"\nTest Set Accuracy: {test_accuracy:.4f}")

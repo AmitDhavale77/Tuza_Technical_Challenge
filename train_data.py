@@ -143,29 +143,85 @@ print(data['Annual Card Turnover'][990])
 
 print(data.columns)
 
+print(data.head())
 
-# List of columns to drop
 columns_to_drop = [
-    'Visa Debit', 'Mastercard Credit', 'Visa Credit',
-    'Mastercard Business Debit', 'Visa Business Debit',
     'Mastercard Debit_p_value', 'Visa Debit_p_value',
     'Mastercard Credit_p_value', 'Visa Credit_p_value',
     'Mastercard Business Debit_p_value', 'Visa Business Debit_p_value',
-    'Same_p_value', 'Mastercard Debit Percentage',
-    'Mastercard Credit Percentage', 'Mastercard Business Debit Percentage',
-    'Visa Debit Percentage', 'Visa Credit Percentage',
-    'Visa Business Debit Percentage', 'Fixed Charge (p)',
+    'Same_p_value', 
 ]
 
-# Drop the columns from the DataFrame
 data = data.drop(columns=columns_to_drop)
+
+# Define the weights for Payment Network and Card Type
+w_payment_network_mastercard = 0.4  # 40% of card payments are from Mastercard
+w_payment_network_visa = 0.6  # 60% of card payments are from Visa
+
+w_card_type_debit = 0.9  # 90% of card payments are made using Debit cards
+w_card_type_credit = 0.08  # 8% are made using Credit cards
+w_card_type_business_debit = 0.02  # 2% are made using Business Debit cards
+
+
+
+def calculate_new_columns(data, percentage_column, fixed_charge_column):
+    # Calculate the individual columns for each card type and payment network
+    mastercard_debit = w_payment_network_mastercard * w_card_type_debit * data[percentage_column] + (data[fixed_charge_column] / (100 * data['Average Transaction Amount']))
+    visa_debit = w_payment_network_visa * w_card_type_debit * data[percentage_column] + (data[fixed_charge_column] / (100 * data['Average Transaction Amount']))
+    mastercard_credit = w_payment_network_mastercard * w_card_type_credit * data[percentage_column] + (data[fixed_charge_column] / (100 * data['Average Transaction Amount']))
+    visa_credit = w_payment_network_visa * w_card_type_credit * data[percentage_column] + (data[fixed_charge_column] / (100 * data['Average Transaction Amount']))
+    mastercard_business_debit = w_payment_network_mastercard * w_card_type_business_debit * data[percentage_column] + (data[fixed_charge_column] / (100 * data['Average Transaction Amount']))
+    visa_business_debit = w_payment_network_visa * w_card_type_business_debit * data[percentage_column] + (data[fixed_charge_column] / (100 * data['Average Transaction Amount']))
+
+    # Return a dictionary with the calculated values for each combination
+    return {
+        'Mastercard Debit': mastercard_debit,
+        'Visa Debit': visa_debit,
+        'Mastercard Credit': mastercard_credit,
+        'Visa Credit': visa_credit,
+        'Mastercard Business Debit': mastercard_business_debit,
+        'Visa Business Debit': visa_business_debit
+    }
+
+# Columns to apply
+columns_to_apply = [
+    'Mastercard Debit', 'Visa Debit', 'Mastercard Credit', 'Visa Credit',
+    'Mastercard Business Debit', 'Visa Business Debit'
+]
+
+percentage_columns = {
+    'Mastercard Debit': 'Mastercard Debit Percentage',
+    'Visa Debit': 'Visa Debit Percentage',
+    'Mastercard Credit': 'Mastercard Credit Percentage',
+    'Visa Credit': 'Visa Credit Percentage',
+    'Mastercard Business Debit': 'Mastercard Business Debit Percentage',
+    'Visa Business Debit': 'Visa Business Debit Percentage'
+}
+
+# Apply the formula to each column
+for column in columns_to_apply:
+    data[column] = calculate_new_columns(
+        data, percentage_columns[column], 'Fixed Charge (p)'
+    )[column]
+
+print(data.head())
+
+
+# data['Mastercard Debit'] = (
+#     data['Average Transaction Amount']*0.4*0.9*data['Mastercard Debit Percentage']
+# ) + (data['Fixed Charge (p)'] / 100)
+
 
 # Verify the columns have been dropped
 print(data.columns)
 
 print(data.iloc[0:5])
 
-col = ["MCC Code"]
+col = ["MCC Code",'Mastercard Debit Percentage',
+'Mastercard Credit Percentage', 'Mastercard Business Debit Percentage',
+'Visa Debit Percentage', 'Visa Credit Percentage',
+'Visa Business Debit Percentage', 'Fixed Charge (p)' ]
+
 data = data.drop(columns=col)
 
 print(data.columns)
@@ -228,13 +284,14 @@ print(data.head())
 mcc_frequency = data['MCC Category group'].value_counts()
 print(mcc_frequency)
 
-data.to_csv('data_processing1_train.csv', index=False)
+data.to_csv('data_processing1_trainv2.csv', index=False)
 
-file_path = 'data_processing1_train.csv'
+file_path = 'data_processing1_trainv2.csv'
 
 # Read the CSV file into a DataFrame
 data1 = pd.read_csv(file_path)
 
+print(data1.head())
 
 # Perform one-hot encoding for the 'MCC Category' column
 mcc_category_encoded = pd.get_dummies(data1['MCC Category group'], prefix='encoded_')
@@ -287,9 +344,6 @@ print(data1[['Registered', 'Accepts Card']].head())
 print(data1.head())
 
 data1 = data1.drop(columns=['Registered'])
-data1 = data1.drop(columns=['Mastercard Debit'])
-
-
 
 #data1['Current Provider'] = label_encoder.fit_transform(data1['Current Provider Grouped'])
 data1['Current Provider'] = data1['Current Provider Grouped'].apply(
@@ -323,10 +377,45 @@ plt.show()
 
 
 # Remove the highly correlated feature 
-data1 = data1.drop(columns=['Annual Card Turnover', 'Current Provider'])
+data1 = data1.drop(columns=['Current Provider'])
 
 
 # Again observe the correlation matrix
+spearman_corr = data1.corr(method='spearman')
+
+# Plot the Spearman correlation matrix using a heatmap
+plt.figure(figsize=(13, 9))
+
+sns.heatmap(spearman_corr, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5, vmin=-1, vmax=1, annot_kws={'size': 8})
+
+plt.xticks(rotation=45, ha='right', fontsize=10)  # Rotate x-axis labels
+plt.yticks(fontsize=10)   # Rotate y-axis labels if needed
+
+plt.title('Spearman Correlation Matrix')
+
+plt.tight_layout() 
+plt.show()
+
+data1 = data1.drop(columns=['Mastercard Debit', 'Mastercard Credit', 'Mastercard Business Debit'])
+
+spearman_corr = data1.corr(method='spearman')
+
+# Plot the Spearman correlation matrix using a heatmap
+plt.figure(figsize=(13, 9))
+
+sns.heatmap(spearman_corr, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5, vmin=-1, vmax=1, annot_kws={'size': 8})
+
+plt.xticks(rotation=45, ha='right', fontsize=10)  # Rotate x-axis labels
+plt.yticks(fontsize=10)   # Rotate y-axis labels if needed
+
+plt.title('Spearman Correlation Matrix')
+
+plt.tight_layout() 
+plt.show()
+
+
+data1 = data1.drop(columns=['Total Annual Transaction Fees', 'Visa Debit'])
+
 spearman_corr = data1.corr(method='spearman')
 
 # Plot the Spearman correlation matrix using a heatmap
@@ -356,8 +445,8 @@ data1['Transaction Fees per Unit Turnover_Scaled'] = scaler.fit_transform(transa
 # Check the result
 print(data1[['Transaction Fees per Unit Turnover', 'Transaction Fees per Unit Turnover_Scaled']].head())
 
-print(data1[['Transaction Fees per Unit Turnover', 'Total Annual Transaction Fees']])
 
+print(data1.head())
 import matplotlib.pyplot as plt
 
 plt.figure(figsize=(10, 6))
@@ -410,9 +499,9 @@ plt.tight_layout()
 plt.show()
 
 # Calculate quartiles (Q1, Q2, Q3)
-Q1 = data1['Transaction Fees per Unit Turnover'].quantile(0.25)
+Q1 = data1['Transaction Fees per Unit Turnover'].quantile(0.33)
 Q2 = data1['Transaction Fees per Unit Turnover'].quantile(0.50)  # Median
-Q3 = data1['Transaction Fees per Unit Turnover'].quantile(0.75)
+Q3 = data1['Transaction Fees per Unit Turnover'].quantile(0.66)
 
 # Plotting the histogram
 plt.figure(figsize=(10, 6))
@@ -436,9 +525,9 @@ plt.grid(True)
 plt.show()
 
 # Calculate quartiles (Q1, Q2, Q3)
-Q1 = data1['Transaction Fees per Unit Turnover'].quantile(0.25)
+Q1 = data1['Transaction Fees per Unit Turnover'].quantile(0.33)
 Q2 = data1['Transaction Fees per Unit Turnover'].quantile(0.50)  # Median
-Q3 = data1['Transaction Fees per Unit Turnover'].quantile(0.75)
+Q3 = data1['Transaction Fees per Unit Turnover'].quantile(0.66)
 
 # Define conditions based on quartiles
 conditions = [
@@ -464,20 +553,72 @@ from sklearn.preprocessing import MinMaxScaler
 scaler = MinMaxScaler()
 
 # Apply MinMax scaling to the selected columns
-data1[['Average Transaction Amount Scaled', 'Total Annual Transaction Fees Scaled']] = scaler.fit_transform(
-    data1[['Average Transaction Amount', 'Total Annual Transaction Fees']]
+data1[['Average Transaction Amount Scaled', 
+       'Total Annual Transaction Fees Scaled', 
+       'Visa Debit Scaled', 
+       'Visa Credit Scaled', 
+       'Annual Card Turnover Scaled',
+       'Visa Business Debit Scaled']] = scaler.fit_transform(
+    data1[['Average Transaction Amount', 
+           'Total Annual Transaction Fees', 
+           'Visa Debit', 
+           'Visa Credit', 
+           'Annual Card Turnover',
+           'Visa Business Debit']]
 )
 
 # Check the scaled data
 print(data1[['Average Transaction Amount Scaled', 'Total Annual Transaction Fees Scaled']].head())
 
 # Drop the specified columns
-data1 = data1.drop(columns=['Transaction Fees per Unit Turnover', 'Average Transaction Amount', 'Total Annual Transaction Fees'])
-
-
+data1 = data1.drop(columns=['Average Transaction Amount',
+            'Annual Card Turnover', 
+            'Transaction Fees per Unit Turnover',
+           'Total Annual Transaction Fees', 
+           'Visa Debit', 
+           'Visa Credit', 
+           'Visa Business Debit'])
 
 print(data1.head())
 
-data1.to_csv('updated_transaction_data_withlabels1.csv', index=False)
+data1.to_csv('updated_transaction_data_withlabels3.csv', index=False)
 
 print("CSV file has been saved successfully!")
+
+data2 = pd.read_csv('updated_transaction_data_withlabels1.csv')
+
+print(data2.head())
+import matplotlib.pyplot as plt
+
+# Assuming `data1` has a column with the class labels and the feature
+class_column = 'Current pricing'  # Replace with the actual class label column name
+feature_column = 'Transaction Fees per Unit Turnover_Scaled'  # Replace with the actual feature column name
+
+# Get unique class labels
+class_labels = data2[class_column].unique()
+
+# Define color palette for classes
+colors = ['skyblue', 'orange', 'green', 'red', 'purple', 'brown']  # Add more if needed
+
+plt.figure(figsize=(10, 6))
+
+# Plot histograms for each class
+for i, label in enumerate(class_labels):
+    class_data = data2[data2[class_column] == label]    
+    plt.hist(
+        class_data[feature_column],
+        bins=200,
+        alpha=0.5,  # Transparency
+        color=colors[i % len(colors)],  # Cycle through colors
+        edgecolor='black',
+        label=f"Class {label}"
+    )
+
+plt.title("Histogram of Transaction Fees per Unit Turnover by Class", fontsize=14)
+plt.xlabel("Transaction Fees per Unit Turnover", fontsize=12)
+plt.ylabel("Frequency", fontsize=12)
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.xlim(0, 0.5)
+plt.legend(title="Class Labels", fontsize=10)
+plt.tight_layout()
+plt.show()

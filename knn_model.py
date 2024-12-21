@@ -14,19 +14,30 @@ pd.set_option('display.width', None)  # Auto-detect width
 pd.set_option('display.max_colwidth', None)  # No limit on column width
 
 
-file_path = 'updated_transaction_data_withlabels.csv'
+file_path = 'updated_transaction_data_withlabels3.csv'
 
 # Read the CSV file into a DataFrame
 data = pd.read_csv(file_path)
 
-print(data.head())
+#print(data["Current Provider"].value_counts())
 
 print(data.columns)
 
 label_column = 'Current pricing'  
+#X = data.drop(columns=[label_column])  # Features
+data['encoded__Miscellaneous Stores'] = data['encoded__Miscellaneous Stores'].astype(int)
 
+# 'Annual Card Turnover Scaled',
+# 'Visa Debit Scaled',
+# 'Visa Credit Scaled',
+# 'Visa Business Debit Scaled',
 
-X = data.drop(columns=[label_column])
+X = data.drop(columns=[label_column,
+'Transaction Fees per Unit Turnover_Scaled',
+'Visa Debit Scaled',
+'Total Annual Transaction Fees Scaled'
+])
+
 
 
 #X = data.drop(columns=[label_column, 'Transaction Fees per Unit Turnover_Scaled'])  # Drop target column to get features

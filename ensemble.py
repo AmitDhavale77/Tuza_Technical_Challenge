@@ -10,19 +10,43 @@ best_knn_params = {'metric': 'euclidean', 'n_neighbors': 4, 'weights': 'distance
 best_rf_params = {'max_depth': None, 'max_features': None, 'min_samples_leaf': 2, 'min_samples_split': 2, 'n_estimators': 32}
 best_svm_params = {'C': 10, 'degree': 2, 'gamma': 'scale', 'kernel': 'linear'}
 
-file_path = 'updated_transaction_data_withlabels.csv'
+pd.set_option('display.max_rows', None)  # No limit on rows
+pd.set_option('display.max_columns', None)  # No limit on columns
+pd.set_option('display.width', None)  # Auto-detect width
+pd.set_option('display.max_colwidth', None)  # No limit on column width
+
+
+file_path = 'updated_transaction_data_withlabels3.csv'
 
 # Read the CSV file into a DataFrame
 data = pd.read_csv(file_path)
 
-print(data.head())
+#print(data["Current Provider"].value_counts())
 
 print(data.columns)
 
-label_column = 'Current pay'  
-X = data.drop(columns=[label_column, 'Transaction_per_Unit_Turnover_RobustScaled'])  # Features
+label_column = 'Current pricing'  
+#X = data.drop(columns=[label_column])  # Features
+data['encoded__Miscellaneous Stores'] = data['encoded__Miscellaneous Stores'].astype(int)
+
+# 'Annual Card Turnover Scaled',
+# 'Visa Debit Scaled',
+# 'Visa Credit Scaled',
+# 'Visa Business Debit Scaled',
+
+X = data.drop(columns=[label_column,
+'Transaction Fees per Unit Turnover_Scaled',
+'Visa Debit Scaled',
+'Total Annual Transaction Fees Scaled'
+])
+  # Features
 y = data[label_column]  # Target labels (already encoded)
 
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.ensemble import GradientBoostingClassifier
+
+le = LabelEncoder()
+y = le.fit_transform(y)
 
 # Split the data into training and test sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
