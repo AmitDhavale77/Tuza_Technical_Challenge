@@ -54,7 +54,7 @@ def make_predictions(input_data, path_to_trained_model, path_to_encoded_labels):
 
     # Predict fee category for a single row (e.g., the first row of the dataset)
     predicted_category = predict_fees_category(input_data, rf_clf, le)  # Data must be 2D for prediction
-    print(f"The predicted fee category for this business is 1: {predicted_category}")
+    print(f"The predicted fee category for this business is : {predicted_category}")
 
 if __name__ == "__main__":
 
