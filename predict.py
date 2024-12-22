@@ -71,7 +71,7 @@ rf_clf = joblib.load('random_forest_model.pkl')
 le = joblib.load('label_encoder.pkl')
 
 # Predict fee category for a single row (e.g., the first row of the dataset)
-predicted_category = predict_fees_category(data.iloc[[1]], rf_clf, le)  # Data must be 2D for prediction
+predicted_category = predict_fees_category(data.iloc[1], rf_clf, le)  # Data must be 2D for prediction
 print(f"The predicted fee category for this business is 1: {predicted_category}")
 
 # Example usage for multiple rows (e.g., the first 5 rows of the dataset)
