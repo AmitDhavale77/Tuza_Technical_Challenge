@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
 import joblib
-from train_data import input_data_preprocessing
+from processed_input_data import input_data_preprocessing
 
 # Suppress SettingWithCopyWarning
 pd.options.mode.chained_assignment = None
@@ -32,7 +32,7 @@ def predict_fees_category(data, model, label_encoder):
         data = data.to_frame().T   # Transpose the row to match DataFrame format
     
     # Preprocess the input data using the custom preprocessing function
-    X = input_data_preprocessing(data)
+    X = input_data_preprocessing(data, path_to_stored_scaling="scaler.pkl")
 
     # Drop any unnecessary columns that are not used for prediction
     columns_to_drop = ['Transaction Fees per Unit Turnover Scaled']
@@ -49,8 +49,6 @@ def predict_fees_category(data, model, label_encoder):
 
     return predicted_labels
 
-# Example usage:
-# Assuming 'rf_clf' is the trained model, 'le' is the label encoder, and 'row' is the input row as a DataFrame
 # Example input row (for demonstration purposes, this would need to match your data's structure)
 # row = pd.Series({
 #     'MCC Code': 'Some MCC', 
@@ -64,16 +62,18 @@ def predict_fees_category(data, model, label_encoder):
 # })
 # data = pd.DataFrame([input_data_dict])
 
-file_path = 'data.csv'
-data = pd.read_csv(file_path)
-# Load the saved model
-rf_clf = joblib.load('random_forest_model.pkl')
-le = joblib.load('label_encoder.pkl')
+if __name__ == "__main__":
+    file_path = 'data.csv'
+    data = pd.read_csv(file_path)
 
-# Predict fee category for a single row (e.g., the first row of the dataset)
-predicted_category = predict_fees_category(data.iloc[1], rf_clf, le)  # Data must be 2D for prediction
-print(f"The predicted fee category for this business is 1: {predicted_category}")
+    # Load the saved model
+    rf_clf = joblib.load('random_forest_model.pkl')
+    le = joblib.load('label_encoder.pkl')
 
-# Example usage for multiple rows (e.g., the first 5 rows of the dataset)
-predicted_categories = predict_fees_category(data.head(5), rf_clf, le)
-print(f"The predicted fee categories for the businesses are 2: {predicted_categories}")
+    # Predict fee category for a single row (e.g., the first row of the dataset)
+    predicted_category = predict_fees_category(data.iloc[0], rf_clf, le)  # Data must be 2D for prediction
+    print(f"The predicted fee category for this business is 1: {predicted_category}")
+
+    # Example usage for multiple rows (e.g., the first 5 rows of the dataset)
+    predicted_categories = predict_fees_category(data.head(5), rf_clf, le)
+    print(f"The predicted fee categories for the businesses are 2: {predicted_categories}")

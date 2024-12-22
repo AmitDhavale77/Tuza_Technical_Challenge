@@ -89,13 +89,14 @@ def random_forest_pipeline(file_path, label_column, excluded_columns=None, save_
     if save_model:
         loaded_rf_clf = joblib.load(model_path)
         predictions = loaded_rf_clf.predict(X_test)
-        print("\nSample Predictions:", predictions[:10])
+        print("\nSample Predictions:", predictions)
 
-# Example Usage
-random_forest_pipeline(
-    file_path='updated_transaction_data_withlabels4.csv',
-    label_column='Current pricing',
-    excluded_columns=['Transaction Fees per Unit Turnover Scaled'],
-    save_model=False,
-    save_encoder=False
-)
+if __name__ == "__main__":
+    # Example Usage
+    random_forest_pipeline(
+        file_path='updated_transaction_data_withlabels4.csv',
+        label_column='Current pricing',
+        excluded_columns=['Transaction Fees per Unit Turnover Scaled'],
+        save_model=False,
+        save_encoder=False
+    )

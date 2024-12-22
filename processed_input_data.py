@@ -339,7 +339,7 @@ def scale_columns(data, column_name_list, loaded_scaler):
     return data
 
 
-def input_data_preprocessing(data):
+def input_data_preprocessing(data, path_to_stored_scaling):
     """
     Preprocesses the given data by performing multiple steps such as categorizing, cleaning, transforming, 
     encoding, and visualizing. This function involves:
@@ -451,7 +451,7 @@ def input_data_preprocessing(data):
     ]
 
     # Define the path where the fitted scaler will be saved or loaded
-    scaler_path = "scaler.pkl"
+    scaler_path = path_to_stored_scaling # "scaler.pkl"
     # Uncomment the following line if you need to save a fitted scaler based on all rows in the dataset
     # This step is done only once to fit the scaler on the entire dataset and save it for future use
     # save_fitted_scaler(data, column_name_list, scaler_path)
@@ -478,6 +478,3 @@ if __name__ == "__main__":
     data = input_data_preprocessing(data)
 
     print(data.head())
-# data.to_csv('updated_transaction_data_withlabels4.csv', index=False)
-
-# print("CSV file has been saved successfully!")
