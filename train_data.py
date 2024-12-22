@@ -261,7 +261,7 @@ mcc_frequency = data['Current Provider'].value_counts()
  
 # Group 'Current Provider' into two categories: 'None' and 'Other' to make the dataset balanced
 data['Current Provider Grouped'] = data['Current Provider'].apply(
-    lambda x: 'None' if x == 'none' else 'Other'
+    lambda x: 'Empty' if x == 'none' else 'Other'
 )
 
 # Check the first few rows of the new column
@@ -284,20 +284,32 @@ print(data.head())
 mcc_frequency = data['MCC Category group'].value_counts()
 print(mcc_frequency)
 
-data.to_csv('data_processing1_trainv2.csv', index=False)
+data.to_csv('data_processing1_trainv3.csv', index=False)
 
-file_path = 'data_processing1_trainv2.csv'
+file_path = 'data_processing1_trainv3.csv'
 
 # Read the CSV file into a DataFrame
 data1 = pd.read_csv(file_path)
 
 print(data1.head())
 
-# Perform one-hot encoding for the 'MCC Category' column
-mcc_category_encoded = pd.get_dummies(data1['MCC Category group'], prefix='encoded_')
+print(data1)
+from sklearn.preprocessing import LabelEncoder
 
-# Merge the encoded columns back into the original dataframe
-data1 = pd.concat([data1, mcc_category_encoded], axis=1)
+# Create a label encoder
+label_encoder = LabelEncoder()
+
+# Encode 'Registered' and 'Accepts Card' columns
+data1['MCC Category group'] = label_encoder.fit_transform(data1['MCC Category group'])
+
+
+
+
+# # Perform one-hot encoding for the 'MCC Category' column
+# mcc_category_encoded = pd.get_dummies(data1['MCC Category group'], prefix='encoded_')
+
+# # Merge the encoded columns back into the original dataframe
+# data1 = pd.concat([data1, mcc_category_encoded], axis=1)
 
 # Check the updated dataframe
 print(data1.head())
@@ -305,7 +317,7 @@ print(data1["Current Provider Grouped"].value_counts())
 
 # print(data1["Current Provider Grouped"]==None)
 
-data1 = data1.drop(columns=['MCC Category', 'MCC Category group', 'encoded__Other'])
+data1 = data1.drop(columns=['MCC Category'])
 
 # mcc_frequency = data['MCC_Category_Agricultural Services'].value_counts()
 # print(mcc_frequency)
@@ -321,7 +333,7 @@ numerical_summary = data1.describe()
 print("Summary of Numerical Features:")
 print(numerical_summary)
 
-data1['Is Registered'] = data1['Is Registered'].map({'Yes': 0, 'No': 1})
+# data1['Is Registered'] = data1['Is Registered'].map({'Yes': 0, 'No': 1})
 
 # mcc_frequency = data['Is Registered'].value_counts()
 # print(mcc_frequency)
@@ -335,9 +347,9 @@ from sklearn.preprocessing import LabelEncoder
 label_encoder = LabelEncoder()
 
 # Encode 'Registered' and 'Accepts Card' columns
-data1['Registered'] = label_encoder.fit_transform(data1['Is Registered'])
+data1['Is Registered'] = label_encoder.fit_transform(data1['Is Registered'])
 data1['Accepts Card'] = label_encoder.fit_transform(data1['Accepts Card'])
-
+data1['Current Provider'] = label_encoder.fit_transform(data1['Current Provider Grouped'])
 # Display the updated data
 print(data1[['Registered', 'Accepts Card']].head())
 
@@ -345,9 +357,9 @@ print(data1.head())
 
 data1 = data1.drop(columns=['Registered'])
 
-#data1['Current Provider'] = label_encoder.fit_transform(data1['Current Provider Grouped'])
-data1['Current Provider'] = data1['Current Provider Grouped'].apply(
-    lambda x: 0 if pd.isna(x) else 1)
+# #data1['Current Provider'] = label_encoder.fit_transform(data1['Current Provider Grouped'])
+# data1['Current Provider'] = data1['Current Provider Grouped'].apply(
+#     lambda x: 0 if pd.isna(x) else 1)
 
 data1 = data1.drop(columns=['Current Provider Grouped'])
 
@@ -431,6 +443,7 @@ plt.title('Spearman Correlation Matrix')
 plt.tight_layout() 
 plt.show()
 
+# print(data1["Current Provider"])
 from sklearn.preprocessing import RobustScaler, MinMaxScaler, StandardScaler
 
 # Initialize the RobustScaler
@@ -554,28 +567,20 @@ scaler = MinMaxScaler()
 
 # Apply MinMax scaling to the selected columns
 data1[['Average Transaction Amount Scaled', 
-       'Total Annual Transaction Fees Scaled', 
-       'Visa Debit Scaled', 
        'Visa Credit Scaled', 
        'Annual Card Turnover Scaled',
        'Visa Business Debit Scaled']] = scaler.fit_transform(
     data1[['Average Transaction Amount', 
-           'Total Annual Transaction Fees', 
-           'Visa Debit', 
            'Visa Credit', 
            'Annual Card Turnover',
            'Visa Business Debit']]
 )
 
-# Check the scaled data
-print(data1[['Average Transaction Amount Scaled', 'Total Annual Transaction Fees Scaled']].head())
 
 # Drop the specified columns
 data1 = data1.drop(columns=['Average Transaction Amount',
             'Annual Card Turnover', 
             'Transaction Fees per Unit Turnover',
-           'Total Annual Transaction Fees', 
-           'Visa Debit', 
            'Visa Credit', 
            'Visa Business Debit'])
 

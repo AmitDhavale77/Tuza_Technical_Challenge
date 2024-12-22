@@ -19,7 +19,7 @@ pd.set_option('display.width', None)  # Auto-detect width
 pd.set_option('display.max_colwidth', None)  # No limit on column width
 
 
-file_path = 'updated_transaction_data_withlabels3.csv'
+file_path = 'updated_transaction_data_withlabels4.csv'
 
 # Read the CSV file into a DataFrame
 data = pd.read_csv(file_path)
@@ -30,7 +30,7 @@ print(data.columns)
 
 label_column = 'Current pricing'  
 #X = data.drop(columns=[label_column])  # Features
-data['encoded__Miscellaneous Stores'] = data['encoded__Miscellaneous Stores'].astype(int)
+# data['encoded__Miscellaneous Stores'] = data['encoded__Miscellaneous Stores'].astype(int)
 
 # 'Annual Card Turnover Scaled',
 # 'Visa Debit Scaled',
@@ -38,9 +38,7 @@ data['encoded__Miscellaneous Stores'] = data['encoded__Miscellaneous Stores'].as
 # 'Visa Business Debit Scaled',
 
 X = data.drop(columns=[label_column,
-'Transaction Fees per Unit Turnover_Scaled',
-'Visa Debit Scaled',
-'Total Annual Transaction Fees Scaled'
+'Transaction Fees per Unit Turnover Scaled',
 ])
   # Features
 y = data[label_column]  # Target labels (already encoded)
