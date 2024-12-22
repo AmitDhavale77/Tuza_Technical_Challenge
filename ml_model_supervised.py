@@ -28,6 +28,8 @@ data = pd.read_csv(file_path)
 
 print(data.columns)
 
+
+print(data.head())
 label_column = 'Current pricing'  
 #X = data.drop(columns=[label_column])  # Features
 # data['encoded__Miscellaneous Stores'] = data['encoded__Miscellaneous Stores'].astype(int)
@@ -43,14 +45,26 @@ X = data.drop(columns=[label_column,
   # Features
 y = data[label_column]  # Target labels (already encoded)
 
+print(X.head())
+
+print(y.head())
+
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.ensemble import GradientBoostingClassifier
 
 le = LabelEncoder()
 y = le.fit_transform(y)
+print(y)
+
+# le1 = joblib.load('label_encoder.pkl')
+
+# pred = le1.inverse_transform(y)
+
+# joblib.dump(le, 'label_encoder.pkl')
 
 len(X.iloc[0])
 # Split the data into training and test sets
+
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Print the lengths of the training and test sets
@@ -75,7 +89,40 @@ cv_recall = cross_val_score(rf_clf, X, y, cv=5, scoring=recall_scorer)
 rf_clf.fit(X_train, y_train)
 
 # Make predictions
-y_pred = rf_clf.predict(X_test)
+y_pred = rf_clf.predict(X_test.iloc[[5]])
+print(y_pred)
+
+print(y_test[5])
+
+test_accuracy = accuracy_score(y_test.iloc[0], y_pred)
+print(f"\nTest Set Accuracy: {test_accuracy:.4f}")
+
+print("\nClassification Report:")
+print(classification_report(y_test, predictions))
+
+# Calculate and display accuracy on the test set
+test_accuracy = accuracy_score(y_test, y_pred)
+print(f"\nTest Set Accuracy: {test_accuracy:.4f}")
+
+
+
+
+
+
+
+
+
+import joblib
+
+# Save the trained model
+joblib.dump(rf_clf, 'random_forest_model.pkl')
+
+# Load the saved model
+loaded_rf_clf = joblib.load('random_forest_model.pkl')
+
+# Use the loaded model for predictions
+predictions = loaded_rf_clf.predict(X_test)
+
 
 print(f"\nCross-Validation Accuracy Scores: {cv_scores}")
 print(f"Mean CV Accuracy: {cv_scores.mean():.4f}")
@@ -119,21 +166,12 @@ plt.ylabel('Actual', fontweight='bold')
 plt.title('Cross-Validation Confusion Matrix', fontweight='bold')
 plt.show()
 
-
-
-
-
-
-
-
-
-
 # Evaluate the model on the test set
 print("\nConfusion Matrix:")
 print(confusion_matrix(y_test, y_pred))
 
 print("\nClassification Report:")
-print(classification_report(y_test, y_pred))
+print(classification_report(y_test, predictions))
 
 # Calculate and display accuracy on the test set
 test_accuracy = accuracy_score(y_test, y_pred)
