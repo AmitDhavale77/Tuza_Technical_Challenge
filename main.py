@@ -63,6 +63,7 @@ if __name__ == "__main__":
     run_data_preprocessing(filename)
 
     # Function to train the Random Forest model using the preprocessed data obtained from run_data_preprocessing()
+    # It also gives the K-fold cross-validation (K=5) evaluation of the trained model along with the visualization of the Confusion Matrix
     path_to_processed_csv = 'updated_transaction_data_with_labels.csv'
     run_model_training(path_to_processed_csv)
 

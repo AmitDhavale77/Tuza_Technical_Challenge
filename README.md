@@ -68,7 +68,8 @@ This will preprocess the input dataset, provide you with the data visualization 
 #### run_model_training()
 
 This will train the Random Forest model using the preprocessed data obtained from run_data_preprocessing().
-
+It also gives the K-fold cross-validation (K=5) evaluation of the trained model along with the visualization of the Confusion Matrix
+ 
 #### make_predictions()
 
 This will make predictions using the trained model.

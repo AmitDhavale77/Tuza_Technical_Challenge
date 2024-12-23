@@ -341,15 +341,14 @@ def scale_columns(data, column_name_list, loaded_scaler):
 
 def input_data_preprocessing(data, path_to_stored_scaling):
     """
-    Preprocesses the given data by performing multiple steps such as categorizing, cleaning, transforming, 
-    encoding, and visualizing. This function involves:
+    Preprocesses the given input row/rows of data by performing multiple steps such as categorizing, cleaning, transforming, 
+    encoding, and scaling. This function involves:
     - Assigning MCC categories based on MCC codes.
     - Handling missing values and inconsistencies.
     - Extracting and transforming percentage and fixed charge values.
     - Calculating annual transaction fees.
     - Encoding categorical columns.
     - Dropping redundant or highly correlated columns.
-    - Visualizing correlations and histograms.
 
     Parameters:
     - data (DataFrame): The input DataFrame containing raw data.
@@ -452,6 +451,7 @@ def input_data_preprocessing(data, path_to_stored_scaling):
 
     # Define the path where the fitted scaler will be saved or loaded
     scaler_path = path_to_stored_scaling # "scaler.pkl"
+
     # Uncomment the following line if you need to save a fitted scaler based on all rows in the dataset
     # This step is done only once to fit the scaler on the entire dataset and save it for future use
     # save_fitted_scaler(data, column_name_list, scaler_path)
