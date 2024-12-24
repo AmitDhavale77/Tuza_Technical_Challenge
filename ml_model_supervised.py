@@ -1,6 +1,7 @@
 import pandas as pd
+import numpy as np
 import joblib
-from sklearn.model_selection import train_test_split, cross_val_score, cross_val_predict
+from sklearn.model_selection import train_test_split, cross_val_score, cross_val_predict, cross_validate
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import (
@@ -49,22 +50,39 @@ def random_forest_pipeline(file_path, label_column, excluded_columns=None, save_
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Step 5: Initialize the Random Forest Classifier
-    rf_clf = RandomForestClassifier(random_state=42, n_estimators=100)
+    rf_clf = RandomForestClassifier(min_samples_leaf=4, random_state=42, n_estimators=100)
 
     # Step 6: Perform 5-fold cross-validation to evaluate the model
-    cv_scores = cross_val_score(rf_clf, X, y, cv=5, scoring='accuracy')
+    cv_scores = cross_validate(rf_clf, X, y, cv=5, scoring='accuracy', return_train_score=True)
     precision_scorer = make_scorer(precision_score, average='weighted')
     recall_scorer = make_scorer(recall_score, average='weighted')
-    cv_precision = cross_val_score(rf_clf, X, y, cv=5, scoring=precision_scorer)
-    cv_recall = cross_val_score(rf_clf, X, y, cv=5, scoring=recall_scorer)
+    cv_precision = cross_validate(rf_clf, X, y, cv=5, scoring=precision_scorer, return_train_score=True)
+    cv_recall = cross_validate(rf_clf, X, y, cv=5, scoring=recall_scorer, return_train_score=True)
 
+    # Extracting the train and test (validation) metrics
+    train_accuracies = cv_scores['train_score']
+    val_accuracies = cv_scores['test_score']
+
+    train_precision = cv_precision['train_score']
+    test_precision = cv_precision['test_score']
+
+    train_recall = cv_recall['train_score']
+    test_recall = cv_recall['test_score']
     # Step 7: Display cross-validation results
-    print(f"\nCross-Validation Accuracy Scores: {cv_scores}")
-    print(f"Mean CV Accuracy: {cv_scores.mean():.4f}")
-    print(f"Cross-Validation Precision Scores: {cv_precision}")
-    print(f"Mean CV Precision: {cv_precision.mean():.4f}")
-    print(f"Cross-Validation Recall Scores: {cv_recall}")
-    print(f"Mean CV Recall: {cv_recall.mean():.4f}")
+    print(f"\nTrain Accuracies: {train_accuracies}")
+    print(f"Validation Accuracies: {val_accuracies}")
+    print(f"Mean Train Accuracy: {np.mean(train_accuracies):.4f}")
+    print(f"Mean Validation Accuracy: {np.mean(val_accuracies):.4f}")
+
+    print(f"\nCross-Validation Train Precision Scores: {train_precision}")
+    print(f"Cross-Validation Test Precision Scores: {test_precision}")
+    print(f"Mean Train Precision: {np.mean(train_precision):.4f}")
+    print(f"Mean Test Precision: {np.mean(test_precision):.4f}")
+
+    print(f"\nCross-Validation Train Recall Scores: {train_recall}")
+    print(f"Cross-Validation Test Recall Scores: {test_recall}")
+    print(f"Mean Train Recall: {np.mean(train_recall):.4f}")
+    print(f"Mean Test Recall: {np.mean(test_recall):.4f}")
 
     # Step 8: Generate predictions using cross-validation
     y_pred_cv = cross_val_predict(rf_clf, X, y, cv=5)
@@ -97,6 +115,6 @@ if __name__ == "__main__":
         file_path='updated_transaction_data_with_labels.csv',
         label_column='Current pricing',
         excluded_columns=['Transaction Fees per Unit Turnover Scaled'],
-        save_model=False,
+        save_model=True,
         save_encoder=False
     )
