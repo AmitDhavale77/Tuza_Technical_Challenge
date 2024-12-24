@@ -30,13 +30,17 @@ model training, evaluation, and optional saving of the model and label encoder.
 This script contains functions to predict the pricing category (e.g., 'Competitive', 'Neutral', 'Non-Competitive')
 for the given input data based on a trained machine-learning model.
 
-#### `data.csv`
+### data folder
+
+#### `data.csv` 
 
 This is the CSV file provided as part of the challenge.
 
 #### `updated_transaction_data_with_labels.csv`
 
 This CSV file contains the final processed attributes of the dataset.
+
+### pickle_files folder
 
 #### `label_encoder.pkl`
 
