@@ -656,8 +656,8 @@ def data_preprocessing(data):
     return data
 
 if __name__ == "__main__":
-    file_path = 'data.csv'
+    file_path = 'data//data.csv'
     data = pd.read_csv(file_path)
     data = data_preprocessing(data)
-    data.to_csv('updated_transaction_data_with_labels.csv', index=False)
+    data.to_csv("data//updated_transaction_data_with_labels.csv", index=False)
     print("CSV file has been saved successfully!")

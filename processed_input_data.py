@@ -471,10 +471,11 @@ def input_data_preprocessing(data, path_to_stored_scaling):
     return data
 
 if __name__ == "__main__":
-    file_path = 'data.csv'
+    file_path = 'data//data.csv'
 
     data = pd.read_csv(file_path)
 
-    data = input_data_preprocessing(data)
+    path_to_stored_scaling = 'pickle_files//scaler.pkl'
+    data = input_data_preprocessing(data, path_to_stored_scaling)
 
     print(data.head())

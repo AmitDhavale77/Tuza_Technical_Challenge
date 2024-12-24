@@ -18,7 +18,7 @@ def run_data_preprocessing(filename):
     file_path = filename
     data = pd.read_csv(file_path)
     data = data_preprocessing(data)
-    data.to_csv('updated_transaction_data_with_labels.csv', index=False)
+    data.to_csv('data//updated_transaction_data_with_labels.csv', index=False)
     print("CSV file has been saved successfully!")
 
 def run_model_training(path_to_processed_csv):
@@ -31,7 +31,7 @@ def run_model_training(path_to_processed_csv):
 
     file_path = path_to_processed_csv
     random_forest_pipeline(
-        file_path='updated_transaction_data_with_labels.csv',
+        file_path='data//updated_transaction_data_with_labels.csv',
         label_column='Current pricing',
         excluded_columns=['Transaction Fees per Unit Turnover Scaled'],
         save_model=False,
@@ -59,17 +59,17 @@ def make_predictions(input_data, path_to_trained_model, path_to_encoded_labels):
 if __name__ == "__main__":
 
     # Function to preprocess the input dataset and save it as a new CSV
-    filename = 'data.csv'
+    filename = 'data//data.csv'
     run_data_preprocessing(filename)
 
     # Function to train the Random Forest model using the preprocessed data obtained from run_data_preprocessing()
     # It also gives the K-fold cross-validation (K=5) evaluation of the trained model along with the visualization of the Confusion Matrix
-    path_to_processed_csv = 'updated_transaction_data_with_labels.csv'
+    path_to_processed_csv = 'data//updated_transaction_data_with_labels.csv'
     run_model_training(path_to_processed_csv)
 
     # Function to make predictions using the trained model
-    path_to_trained_model = 'random_forest_model.pkl'
-    path_to_encoded_labels = 'label_encoder.pkl'
+    path_to_trained_model = 'pickle_files//random_forest_model.pkl'
+    path_to_encoded_labels = 'pickle_files//label_encoder.pkl'
 
     # Example of expected type of input row (for demonstration purposes)
     # row = pd.Series({
@@ -84,7 +84,7 @@ if __name__ == "__main__":
     # })
 
     # Example input row for prediction 
-    file_path = 'data.csv'
+    file_path = 'data//data.csv'
     data = pd.read_csv(file_path)
 
     input_data = data.iloc[5]

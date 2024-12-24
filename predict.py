@@ -28,11 +28,11 @@ def predict_fees_category(data, model, label_encoder):
     # Check if the input is a single row or a DataFrame
     if isinstance(data, pd.Series):
         # If it's a single row (Series), convert it to a DataFrame to maintain consistency
-        print("Series") # data.to_frame().T
+        # data.to_frame().T
         data = data.to_frame().T   # Transpose the row to match DataFrame format
     
     # Preprocess the input data using the custom preprocessing function
-    X = input_data_preprocessing(data, path_to_stored_scaling="scaler.pkl")
+    X = input_data_preprocessing(data, path_to_stored_scaling="pickle_files//scaler.pkl")
 
     # Drop any unnecessary columns that are not used for prediction
     columns_to_drop = ['Transaction Fees per Unit Turnover Scaled']
@@ -63,17 +63,17 @@ def predict_fees_category(data, model, label_encoder):
 # data = pd.DataFrame([input_data_dict])
 
 if __name__ == "__main__":
-    file_path = 'data.csv'
+    file_path = 'data//data.csv'
     data = pd.read_csv(file_path)
 
     # Load the saved model
-    rf_clf = joblib.load('random_forest_model.pkl')
-    le = joblib.load('label_encoder.pkl')
+    rf_clf = joblib.load('pickle_files//random_forest_model.pkl')
+    le = joblib.load('pickle_files//label_encoder.pkl')
 
     # Predict fee category for a single row (e.g., the first row of the dataset)
-    predicted_category = predict_fees_category(data.iloc[0], rf_clf, le)  # Data must be 2D for prediction
+    predicted_category = predict_fees_category(data.iloc[1], rf_clf, le)  # Data must be 2D for prediction
     print(f"The predicted fee category for this business is : {predicted_category}")
 
     # Example usage for multiple rows (e.g., the first 5 rows of the dataset)
-    predicted_categories = predict_fees_category(data.head(5), rf_clf, le)
+    predicted_categories = predict_fees_category(data.head(), rf_clf, le)
     print(f"The predicted fee categories for the businesses are : {predicted_categories}")
