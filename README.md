@@ -57,7 +57,7 @@ This file contains the stored scaling factors for the final processed numerical 
 
 ## Instructions
 
-Running the script to output whether the fees a business currently pays are competitive, neutral or non-competitive.
+Running the script (Set the 'Tuza_Technical_Challenge' directory as the home folder for the project) to output whether the fees a business currently pays are competitive, neutral or non-competitive.
 
 ```bash
 python main.py
