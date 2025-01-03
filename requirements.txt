@@ -2,5 +2,5 @@ joblib==1.4.2
 matplotlib==3.7.2
 numpy==1.25.2
 pandas==2.2.3
-scikit_learn==1.6.0
+scikit_learn==1.5.2 # The code works with higher versions of scikit-learn, but may generate some warnings
 seaborn==0.13.2
